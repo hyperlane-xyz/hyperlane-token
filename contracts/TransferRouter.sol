@@ -1,18 +1,16 @@
 // SPDX-License-Identifier: MIT OR Apache-2.0
 pragma solidity ^0.8.13;
 
-// ============ Internal Imports ============
-import {IAbcToken} from "../interfaces/IAbcToken.sol";
-// ============ External Imports ============
 import {Router} from "@abacus-network/core/contracts/router/Router.sol";
-import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+
+import {AbcToken} from "./AbcToken.sol";
 
 contract TransferRouter is Router {
     // The address of the token contract.
-    IERC20 public token;
+    AbcToken public token;
 
     constructor(address _token) {
-        token = IERC20(_token);
+        token = AbcToken(_token);
     }
 
     error SenderNotToken();
@@ -24,22 +22,37 @@ contract TransferRouter is Router {
         _;
     }
 
-    // Dispatches a message to a remote router to mint `amount` to `recipient`.
     function transferRemote(
+        uint32 domain,
+        address recipient,
+        uint256 amount
+    ) external onlyToken {
+        _dispatchToRemoteRouter(
+            domain,
+            abi.encodeCall(AbcToken.handleTransfer, (recipient, amount))
+        );
+    }
+
+    function transferFromRemote(
         uint32 domain,
         address sender,
         address recipient,
         uint256 amount
-    ) external onlyToken {}
+    ) external onlyToken {
+        _dispatchToRemoteRouter(
+            domain,
+            abi.encodeCall(
+                AbcToken.handleTransferFrom,
+                (sender, recipient, amount)
+            )
+        );
+    }
 
-    // Mints message.amount to message.recipient.
-    function handleTransferMessage(bytes memory message) internal {}
-
-    function handle(
-        uint32 _origin,
-        bytes32 _sender,
-        bytes calldata _message
-    ) external override {
-
+    function _handle(bytes calldata _message)
+        internal
+        override
+        returns (bool, bytes memory)
+    {
+        return address(token).call(_message);
     }
 }
