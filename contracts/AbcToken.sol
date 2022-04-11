@@ -1,29 +1,18 @@
 // SPDX-License-Identifier: MIT OR Apache-2.0
 pragma solidity ^0.8.13;
 
-import {ERC20} from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
+import {Router} from "@abacus-network/app/contracts/Router.sol";
 
-import {TransferRouter} from "./TransferRouter.sol";
+import {ERC20Upgradeable} from "@openzeppelin/contracts-upgradeable/token/ERC20/ERC20Upgradeable.sol";
 
-contract AbcToken is ERC20 {
-    // The TransferRouter responsible for sending messages to mint ABC on remote chains.
-    TransferRouter public router;
+contract AbcToken is Router, ERC20Upgradeable {
+    error OnlyThis();
 
-    error SenderNotRouter();
-
-    modifier onlyRouter() {
-        if (msg.sender != address(router)) {
-            revert SenderNotRouter();
+    modifier onlyThis() {
+        if (msg.sender != address(this)) {
+            revert OnlyThis();
         }
         _;
-    }
-
-    constructor(
-        address _router,
-        string memory name,
-        string memory symbol
-    ) ERC20(name, symbol) {
-        router = TransferRouter(_router);
     }
 
     function transferRemote(
@@ -32,14 +21,10 @@ contract AbcToken is ERC20 {
         uint256 amount
     ) external {
         _burn(msg.sender, amount);
-        router.transferRemote(domain, recipient, amount);
-    }
-
-    function handleTransfer(address recipient, uint256 amount)
-        external
-        onlyRouter
-    {
-        _mint(recipient, amount);
+        _dispatchToRemoteRouter(
+            domain,
+            abi.encodeCall(this.handleTransfer, (recipient, amount))
+        );
     }
 
     function transferFromRemote(
@@ -47,14 +32,32 @@ contract AbcToken is ERC20 {
         address recipient,
         uint256 amount
     ) external {
-        router.transferFromRemote(domain, msg.sender, recipient, amount);
+        _dispatchToRemoteRouter(
+            domain,
+            abi.encodeCall(
+                this.handleTransferFrom,
+                (msg.sender, recipient, amount)
+            )
+        );
+    }
+
+    function handleTransfer(address recipient, uint256 amount) public onlyThis {
+        _mint(recipient, amount);
     }
 
     function handleTransferFrom(
         address sender,
         address recipient,
         uint256 amount
-    ) external onlyRouter {
+    ) public onlyThis {
         _transfer(sender, recipient, amount);
+    }
+
+    function _handle(
+        uint32,
+        bytes32,
+        bytes memory _message
+    ) internal override {
+        address(this).call(_message);
     }
 }
