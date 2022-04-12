@@ -6,6 +6,17 @@ import {Router} from "@abacus-network/app/contracts/Router.sol";
 import {ERC20Upgradeable} from "@openzeppelin/contracts-upgradeable/token/ERC20/ERC20Upgradeable.sol";
 
 contract AbcToken is Router, ERC20Upgradeable {
+    function initialize(
+        address _xAppConnectionManager,
+        uint256 totalSupply,
+        string memory name,
+        string memory symbol
+    ) external initializer {
+        __Router_initialize(_xAppConnectionManager);
+        __ERC20_init(name, symbol);
+        _mint(msg.sender, totalSupply);
+    }
+
     // Burns `amount` of tokens from `msg.sender` on the origin chain and dispatches
     // message to the `destination` chain to mint `amount` of tokens to `recipient`.
     function transferRemote(
