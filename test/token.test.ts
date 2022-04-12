@@ -78,4 +78,13 @@ describe('AbcToken', async () => {
     await expectBalance(remote, recipient, amount);
     await expectBalance(remote, owner, totalSupply);
   });
+
+  it('should emit TransferRemote events', async () => {
+    expect(await router.transferRemote(remoteDomain, recipient.address, amount))
+      .to.emit(router, 'SentTransferRemote')
+      .withArgs(remoteDomain, recipient.address, amount);
+    expect(await abacus.processMessages())
+      .to.emit(router, 'ReceivedTransferRemote')
+      .withArgs(localDomain, recipient.address, amount);
+  });
 });

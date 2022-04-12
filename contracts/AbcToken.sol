@@ -6,6 +6,9 @@ import {Router} from "@abacus-network/app/contracts/Router.sol";
 import {ERC20Upgradeable} from "@openzeppelin/contracts-upgradeable/token/ERC20/ERC20Upgradeable.sol";
 
 contract AbcToken is Router, ERC20Upgradeable {
+    event SentTransferRemote(uint32 indexed destination, address indexed recipient, uint256 amount);
+    event ReceivedTransferRemote(uint32 indexed source, address indexed recipient, uint256 amount);
+
     function initialize(
         address _xAppConnectionManager,
         uint256 _totalSupply,
@@ -26,11 +29,12 @@ contract AbcToken is Router, ERC20Upgradeable {
     ) external {
         _burn(msg.sender, _amount);
         _dispatchToRemoteRouter(_destination, abi.encode(_recipient, _amount));
+        emit SentTransferRemote(_destination, _recipient, _amount);
     }
 
     // Mints `amount` of tokens to `recipient` when router receives transfer `message`.
     function _handle(
-        uint32,
+        uint32 _source,
         bytes32,
         bytes memory _message
     ) internal override {
@@ -39,5 +43,6 @@ contract AbcToken is Router, ERC20Upgradeable {
             (address, uint256)
         );
         _mint(recipient, amount);
+        emit ReceivedTransferRemote(_source, recipient, amount);
     }
 }
