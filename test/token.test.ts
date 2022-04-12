@@ -42,7 +42,7 @@ describe('AbcToken', async () => {
 
   const amount = 10;
 
-  it('should not be initializeable again', async () => {
+  it('should not be initializable again', async () => {
     await expect(
       router.initialize(ethers.constants.AddressZero, 0, '', ''),
     ).to.be.revertedWith('Initializable: contract is already initialized');
