@@ -34,32 +34,48 @@ describe('AbcToken', async () => {
     remote = token.router(remoteDomain);
   });
 
+  const expectBalance = async (
+    token: AbcToken,
+    signer: SignerWithAddress,
+    balance: number,
+  ) => expect(await token.balanceOf(signer.address)).to.eq(balance);
+
+  const amount = 10;
+
   it('should not be initializeable again', async () => {
     await expect(
       router.initialize(ethers.constants.AddressZero, 0, '', ''),
     ).to.be.revertedWith('Initializable: contract is already initialized');
   });
 
-  it('should mint all supply to deployer', async () => {
-    const balance = await router.balanceOf(owner.address);
-    expect(balance).to.eq(totalSupply);
+  it('should mint total supply to deployer', async () => {
+    await expectBalance(router, recipient, 0);
+    await expectBalance(router, owner, totalSupply);
+    await expectBalance(remote, recipient, 0);
+    await expectBalance(remote, owner, totalSupply);
   });
 
   it('should allow for local transfers', async () => {
-    const amount = 10;
     await router.transfer(recipient.address, amount);
-    const balance = await router.balanceOf(recipient.address);
-    expect(balance).to.eq(amount);
+    await expectBalance(router, recipient, amount);
+    await expectBalance(router, owner, totalSupply - amount);
+    await expectBalance(remote, recipient, 0);
+    await expectBalance(remote, owner, totalSupply);
   });
 
   it('should allow for remote transfers', async () => {
-    const amount = 10;
     await router.transferRemote(remoteDomain, recipient.address, amount);
-    const balanceBeforeProcess = await remote.balanceOf(recipient.address);
-    expect(balanceBeforeProcess).to.eq(0);
+
+    await expectBalance(router, recipient, 0);
+    await expectBalance(router, owner, totalSupply - amount);
+    await expectBalance(remote, recipient, 0);
+    await expectBalance(remote, owner, totalSupply);
 
     await abacus.processMessages();
-    const balanceAfterProcess = await remote.balanceOf(recipient.address);
-    expect(balanceAfterProcess).to.eq(amount);
+
+    await expectBalance(router, recipient, 0);
+    await expectBalance(router, owner, totalSupply - amount);
+    await expectBalance(remote, recipient, amount);
+    await expectBalance(remote, owner, totalSupply);
   });
 });
