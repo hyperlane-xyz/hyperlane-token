@@ -2,7 +2,7 @@ import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/signers';
 import { expect } from 'chai';
 import { abacus, ethers } from 'hardhat';
 import { AbcToken } from '../types';
-import { TokenConfig, TokenDeploy } from './lib/TokenDeploy';
+import { TokenConfig, TokenDeploy } from './TokenDeploy';
 
 const localDomain = 1000;
 const remoteDomain = 2000;

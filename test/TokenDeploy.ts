@@ -1,7 +1,7 @@
 import { TestAbacusDeploy, TestRouterDeploy } from '@abacus-network/hardhat';
 import { types } from '@abacus-network/utils';
 import { ethers } from 'ethers';
-import { AbcToken, AbcToken__factory } from '../../types';
+import { AbcToken, AbcToken__factory } from '../types';
 
 export type TokenConfig = {
   signer: ethers.Signer;
