@@ -26,7 +26,7 @@ graph TB
     ABC_E -- "dispatch(Polygon, (Bob, 5))" --> O_E
     Operator -- "checkpoint()" --> O_E
     O_E-.->EthereumInbox
-    Operator -- "checkpoint()" --> EthereumInbox
+    Operator -- "relay()" --> EthereumInbox
     Operator -- "process(Ethereum, (Bob, 5))" --> EthereumInbox
     EthereumInbox-->|"handle(Ethereum, (Bob, 5))"|ABC_P
     ABC_P-.->Bob
