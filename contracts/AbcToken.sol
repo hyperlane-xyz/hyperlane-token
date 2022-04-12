@@ -5,10 +5,43 @@ import {Router} from "@abacus-network/app/contracts/Router.sol";
 
 import {ERC20Upgradeable} from "@openzeppelin/contracts-upgradeable/token/ERC20/ERC20Upgradeable.sol";
 
+/**
+ * @title Abacus Token that extends the ERC20 token standard to enable native interchain transfers.
+ * @author Abacus Works
+ * @dev Supply on each chain is not constant but the aggregate supply across all chains is.
+ */
 contract AbcToken is Router, ERC20Upgradeable {
-    event SentTransferRemote(uint32 indexed destination, address indexed recipient, uint256 amount);
-    event ReceivedTransferRemote(uint32 indexed source, address indexed recipient, uint256 amount);
+    /**
+     * @dev Emitted on `transferRemote` when a transfer message is dispatched.
+     * @param destination The identifier of the destination chain.
+     * @param recipient The address of the recipient on the destination chain.
+     * @param amount The amount of tokens burnt on the source chain.
+     */
+    event SentTransferRemote(
+        uint32 indexed destination,
+        address indexed recipient,
+        uint256 amount
+    );
 
+    /**
+     * @dev Emitted on `_handle` when a transfer message is processed.
+     * @param source The identifier of the source chain.
+     * @param recipient The address of the recipient on the destination chain.
+     * @param amount The amount of tokens minted on the destination chain.
+     */
+    event ReceivedTransferRemote(
+        uint32 indexed source,
+        address indexed recipient,
+        uint256 amount
+    );
+
+    /**
+     * @notice Initializes the Abacus router, ERC20 metadata, and mints initial supply to deployer.
+     * @param _xAppConnectionManager The address of the XAppConnectionManager contract.
+     * @param _totalSupply The initial supply of the token.
+     * @param _name The name of the token.
+     * @param _symbol The symbol of the token.
+     */
     function initialize(
         address _xAppConnectionManager,
         uint256 _totalSupply,
@@ -20,8 +53,15 @@ contract AbcToken is Router, ERC20Upgradeable {
         _mint(msg.sender, _totalSupply);
     }
 
-    // Burns `amount` of tokens from `msg.sender` on the origin chain and dispatches
-    // message to the `destination` chain to mint `amount` of tokens to `recipient`.
+    /**
+     * @notice Transfers `_amount` of tokens from `msg.sender` to `_recipient` on the `_destination` chain.
+     * @dev Burns `_amount` of tokens from `msg.sender` on the origin chain and dispatches
+     *      message to the `destination` chain to mint `_amount` of tokens to `recipient`.
+     * @dev Emits `SentTransferRemote` event on the origin chain.
+     * @param _destination The identifier of the destination chain.
+     * @param _recipient The address of the recipient on the destination chain.
+     * @param _amount The amount of tokens to be sent to the remote recipient.
+     */
     function transferRemote(
         uint32 _destination,
         address _recipient,
@@ -32,7 +72,12 @@ contract AbcToken is Router, ERC20Upgradeable {
         emit SentTransferRemote(_destination, _recipient, _amount);
     }
 
-    // Mints `amount` of tokens to `recipient` when router receives transfer `message`.
+    /**
+     * @dev Mints tokens to recipient when router receives transfer message.
+     * @dev Emits `ReceivedTransferRemote` event on the destination chain.
+     * @param _source The identifier of the origin chain.
+     * @param _message The encoded remote transfer message containing the recipient address and amount.
+     */
     function _handle(
         uint32 _source,
         bytes32,
