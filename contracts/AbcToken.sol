@@ -15,7 +15,7 @@ contract AbcToken is Router, ERC20Upgradeable {
      * @dev Emitted on `transferRemote` when a transfer message is dispatched.
      * @param destination The identifier of the destination chain.
      * @param recipient The address of the recipient on the destination chain.
-     * @param amount The amount of tokens burnt on the source chain.
+     * @param amount The amount of tokens burnt on the origin chain.
      */
     event SentTransferRemote(
         uint32 indexed destination,
@@ -25,12 +25,12 @@ contract AbcToken is Router, ERC20Upgradeable {
 
     /**
      * @dev Emitted on `_handle` when a transfer message is processed.
-     * @param source The identifier of the source chain.
+     * @param origin The identifier of the origin chain.
      * @param recipient The address of the recipient on the destination chain.
      * @param amount The amount of tokens minted on the destination chain.
      */
     event ReceivedTransferRemote(
-        uint32 indexed source,
+        uint32 indexed origin,
         address indexed recipient,
         uint256 amount
     );
