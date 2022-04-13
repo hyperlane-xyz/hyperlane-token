@@ -75,11 +75,11 @@ contract AbcToken is Router, ERC20Upgradeable {
     /**
      * @dev Mints tokens to recipient when router receives transfer message.
      * @dev Emits `ReceivedTransferRemote` event on the destination chain.
-     * @param _source The identifier of the origin chain.
+     * @param _origin The identifier of the origin chain.
      * @param _message The encoded remote transfer message containing the recipient address and amount.
      */
     function _handle(
-        uint32 _source,
+        uint32 _origin,
         bytes32,
         bytes memory _message
     ) internal override {
@@ -88,6 +88,6 @@ contract AbcToken is Router, ERC20Upgradeable {
             (address, uint256)
         );
         _mint(recipient, amount);
-        emit ReceivedTransferRemote(_source, recipient, amount);
+        emit ReceivedTransferRemote(_origin, recipient, amount);
     }
 }
