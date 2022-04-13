@@ -18,8 +18,8 @@
     "coverage": "hardhat coverage"
   },
   "dependencies": {
-    "@abacus-network/core": "^0.0.6",
     "@abacus-network/app": "^0.0.3",
+    "@abacus-network/core": "^0.0.6",
     "@abacus-network/sdk": "^0.0.4",
     "@abacus-network/utils": "^0.0.8",
     "@ethersproject/bignumber": "^5.5.0",
