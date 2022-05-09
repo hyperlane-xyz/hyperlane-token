@@ -42,7 +42,7 @@ jobs:
         uses: actions/cache@v2
         with:
           path: .//node_modules
-          key: ${{ runner.os }}-yarn-cache-${{ hashFiles('./package-lock.json') }}
+          key: ${{ runner.os }}-yarn-cache-${{ hashFiles('./yarn.lock') }}
 
       - name: build-cache
         uses: actions/cache@v2
@@ -61,7 +61,7 @@ jobs:
       - uses: actions/cache@v2
         with:
           path: .//node_modules
-          key: ${{ runner.os }}-yarn-cache-${{ hashFiles('./package-lock.json') }}
+          key: ${{ runner.os }}-yarn-cache-${{ hashFiles('./yarn.lock') }}
 
       - name: prettier
         run: |
