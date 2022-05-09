@@ -68,7 +68,11 @@ contract AbcToken is Router, ERC20Upgradeable {
         uint256 _amount
     ) external payable {
         _burn(msg.sender, _amount);
-        _dispatchWithGasAndCheckpoint(_destination, abi.encode(_recipient, _amount), msg.value);
+        _dispatchWithGasAndCheckpoint(
+            _destination,
+            abi.encode(_recipient, _amount),
+            msg.value
+        );
         emit SentTransferRemote(_destination, _recipient, _amount);
     }
 

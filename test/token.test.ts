@@ -3,7 +3,7 @@ import { expect } from 'chai';
 import { abacus, ethers } from 'hardhat';
 import { AbcToken } from '../types';
 import { TokenConfig, TokenDeploy } from './TokenDeploy';
-import { Outbox, InterchainGasPaymaster } from "@abacus-network/core";
+import { Outbox, InterchainGasPaymaster } from '@abacus-network/core';
 
 const localDomain = 1000;
 const remoteDomain = 2000;
@@ -88,7 +88,9 @@ describe('AbcToken', async () => {
   it('allows interchain gas payment for remote transfers', async () => {
     const leafIndex = await outbox.count();
     await expect(
-      router.transferRemote(remoteDomain, recipient.address, amount, { value: testInterchainGasPayment })
+      router.transferRemote(remoteDomain, recipient.address, amount, {
+        value: testInterchainGasPayment,
+      }),
     )
       .to.emit(interchainGasPaymaster, 'GasPayment')
       .withArgs(leafIndex, testInterchainGasPayment);
