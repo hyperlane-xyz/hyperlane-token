@@ -1,23 +1,23 @@
+import { InterchainGasPaymaster, Outbox } from '@abacus-network/core';
 import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/signers';
 import { expect } from 'chai';
 import { abacus, ethers } from 'hardhat';
-import { AbcToken } from '../types';
-import { TokenConfig, TokenDeploy } from './TokenDeploy';
-import { Outbox, InterchainGasPaymaster } from '@abacus-network/core';
+import { AbcERC20 } from '../types';
+import { ERC20Deploy, TokenConfig } from './TokenDeploy';
 
 const localDomain = 1000;
 const remoteDomain = 2000;
 const totalSupply = 3000;
 const domains = [localDomain, remoteDomain];
 
-describe('AbcToken', async () => {
+describe('AbcERC20', async () => {
   let owner: SignerWithAddress,
     recipient: SignerWithAddress,
-    router: AbcToken,
-    remote: AbcToken,
+    router: AbcERC20,
+    remote: AbcERC20,
     outbox: Outbox,
     interchainGasPaymaster: InterchainGasPaymaster,
-    token: TokenDeploy;
+    token: ERC20Deploy;
   const testInterchainGasPayment = 123456789;
 
   before(async () => {
@@ -28,11 +28,11 @@ describe('AbcToken', async () => {
   beforeEach(async () => {
     const config: TokenConfig = {
       signer: owner,
-      name: 'AbcToken',
+      name: 'AbcERC20',
       symbol: 'ABC',
       totalSupply,
     };
-    token = new TokenDeploy(config);
+    token = new ERC20Deploy(config);
     await token.deploy(abacus);
     router = token.router(localDomain);
     remote = token.router(remoteDomain);
@@ -41,7 +41,7 @@ describe('AbcToken', async () => {
   });
 
   const expectBalance = async (
-    token: AbcToken,
+    token: AbcERC20,
     signer: SignerWithAddress,
     balance: number,
   ) => expect(await token.balanceOf(signer.address)).to.eq(balance);
