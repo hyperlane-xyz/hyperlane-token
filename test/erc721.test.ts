@@ -71,6 +71,24 @@ describe('AbcERC721', async () => {
     await expectBalance(remote, owner, 0);
   });
 
+  it('should allow for local transfers', async () => {
+    await router.transferFrom(owner.address, recipient.address, tokenId);
+    await expectBalance(router, recipient, 1);
+    await expectBalance(router, owner, totalSupply - 1);
+    await expectBalance(remote, recipient, 0);
+    await expectBalance(remote, owner, 0);
+  });
+
+  it('should not allow transfers of nonexistent identifiers', async () => {
+    const invalidTokenId = totalSupply + 1;
+    await expect(
+      router.transferFrom(owner.address, recipient.address, invalidTokenId),
+    ).to.be.revertedWith('ERC721: operator query for nonexistent token');
+    await expect(
+      router.transferRemote(remoteDomain, recipient.address, invalidTokenId),
+    ).to.be.revertedWith('ERC721: owner query for nonexistent token');
+  });
+
   it('should allow for remote transfers', async () => {
     const amount = totalSupply / 10;
     for (let id = 0; id < amount; id++) {
