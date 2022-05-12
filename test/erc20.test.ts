@@ -3,7 +3,7 @@ import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/signers';
 import { expect } from 'chai';
 import { abacus, ethers } from 'hardhat';
 import { AbcERC20 } from '../types';
-import { ERC20Deploy, TokenConfig } from './TokenDeploy';
+import { AbcERC20Deploy, TokenConfig } from './erc20.deploy';
 
 const localDomain = 1000;
 const remoteDomain = 2000;
@@ -17,7 +17,7 @@ describe('AbcERC20', async () => {
     remote: AbcERC20,
     outbox: Outbox,
     interchainGasPaymaster: InterchainGasPaymaster,
-    token: ERC20Deploy;
+    token: AbcERC20Deploy;
   const testInterchainGasPayment = 123456789;
 
   before(async () => {
@@ -32,7 +32,7 @@ describe('AbcERC20', async () => {
       symbol: 'ABC',
       totalSupply,
     };
-    token = new ERC20Deploy(config);
+    token = new AbcERC20Deploy(config);
     await token.deploy(abacus);
     router = token.router(localDomain);
     remote = token.router(remoteDomain);

@@ -3,11 +3,11 @@ import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/signers';
 import { expect } from 'chai';
 import { abacus, ethers } from 'hardhat';
 import { AbcERC721 } from '../types';
-import { ERC721Deploy } from './TokenDeploy';
+import { AbcERC721Deploy } from './erc721.deploy';
 
 const localDomain = 1000;
 const remoteDomain = 2000;
-const totalSupply = 50;
+const mintAmount = 50;
 const domains = [localDomain, remoteDomain];
 
 describe('AbcERC721', async () => {
@@ -17,7 +17,7 @@ describe('AbcERC721', async () => {
     remote: AbcERC721,
     outbox: Outbox,
     interchainGasPaymaster: InterchainGasPaymaster,
-    token: ERC721Deploy;
+    token: AbcERC721Deploy;
   const testInterchainGasPayment = 123456789;
 
   before(async () => {
@@ -34,15 +34,15 @@ describe('AbcERC721', async () => {
     const configMap = {
       [localDomain]: {
         ...defaultConfig,
-        totalSupply,
+        mintAmount,
       },
       [remoteDomain]: {
         ...defaultConfig,
-        totalSupply: 0,
+        mintAmount: 0,
       },
     };
 
-    token = new ERC721Deploy(configMap);
+    token = new AbcERC721Deploy(configMap);
     await token.deploy(abacus);
     router = token.router(localDomain);
     remote = token.router(remoteDomain);
@@ -56,7 +56,7 @@ describe('AbcERC721', async () => {
     balance: number,
   ) => expect(await token.balanceOf(signer.address)).to.eq(balance);
 
-  const tokenId = totalSupply / 2;
+  const tokenId = mintAmount / 2;
 
   it('should not be initializable again', async () => {
     await expect(
@@ -66,7 +66,7 @@ describe('AbcERC721', async () => {
 
   it('should mint total supply to deployer on local domain', async () => {
     await expectBalance(router, recipient, 0);
-    await expectBalance(router, owner, totalSupply);
+    await expectBalance(router, owner, mintAmount);
     await expectBalance(remote, recipient, 0);
     await expectBalance(remote, owner, 0);
   });
@@ -74,13 +74,13 @@ describe('AbcERC721', async () => {
   it('should allow for local transfers', async () => {
     await router.transferFrom(owner.address, recipient.address, tokenId);
     await expectBalance(router, recipient, 1);
-    await expectBalance(router, owner, totalSupply - 1);
+    await expectBalance(router, owner, mintAmount - 1);
     await expectBalance(remote, recipient, 0);
     await expectBalance(remote, owner, 0);
   });
 
   it('should not allow transfers of nonexistent identifiers', async () => {
-    const invalidTokenId = totalSupply + 1;
+    const invalidTokenId = mintAmount + 1;
     await expect(
       router.transferFrom(owner.address, recipient.address, invalidTokenId),
     ).to.be.revertedWith('ERC721: operator query for nonexistent token');
@@ -90,20 +90,20 @@ describe('AbcERC721', async () => {
   });
 
   it('should allow for remote transfers', async () => {
-    const amount = totalSupply / 10;
+    const amount = mintAmount / 10;
     for (let id = 0; id < amount; id++) {
       await router.transferRemote(remoteDomain, recipient.address, id);
     }
 
     await expectBalance(router, recipient, 0);
-    await expectBalance(router, owner, totalSupply - amount);
+    await expectBalance(router, owner, mintAmount - amount);
     await expectBalance(remote, recipient, 0);
     await expectBalance(remote, owner, 0);
 
     await abacus.processMessages();
 
     await expectBalance(router, recipient, 0);
-    await expectBalance(router, owner, totalSupply - amount);
+    await expectBalance(router, owner, mintAmount - amount);
     await expectBalance(remote, recipient, amount);
     await expectBalance(remote, owner, 0);
   });
