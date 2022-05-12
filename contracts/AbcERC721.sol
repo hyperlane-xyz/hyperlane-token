@@ -35,21 +35,21 @@ contract AbcERC721 is Router, ERC721Upgradeable {
     );
 
     /**
-     * @notice Initializes the Abacus router, ERC20 metadata, and mints initial supply to deployer.
+     * @notice Initializes the Abacus router, ERC721 metadata, and mints initial supply to deployer.
      * @param _xAppConnectionManager The address of the XAppConnectionManager contract.
-     * @param _totalSupply The initial supply of the token.
+     * @param _mintAmount The amount of NFTs to mint to `msg.sender`.
      * @param _name The name of the token.
      * @param _symbol The symbol of the token.
      */
     function initialize(
         address _xAppConnectionManager,
-        uint256 _totalSupply,
+        uint256 _mintAmount,
         string memory _name,
         string memory _symbol
     ) external initializer {
         __Router_initialize(_xAppConnectionManager);
         __ERC721_init(_name, _symbol);
-        for (uint256 i = 0; i < _totalSupply; i++) {
+        for (uint256 i = 0; i < _mintAmount; i++) {
             _mint(msg.sender, i);
         }
     }
