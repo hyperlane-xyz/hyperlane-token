@@ -1,19 +1,21 @@
-import {
-  ChainMap,
-  ChainNameToDomainId,
-  getChainToOwnerMap,
-  getTestMultiProvider,
-  objMap,
-  testChainConnectionConfigs,
-  TestChainNames,
-  TestCoreApp,
-  TestCoreDeployer,
-} from '@hyperlane-xyz/sdk';
 import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/signers';
 import '@nomiclabs/hardhat-waffle';
 import { expect } from 'chai';
 import { ethers } from 'hardhat';
-import { HplERC20Config, Erc20TokenConfig } from '../src/config';
+
+import {
+  ChainMap,
+  ChainNameToDomainId,
+  TestChainNames,
+  TestCoreApp,
+  TestCoreDeployer,
+  getChainToOwnerMap,
+  getTestMultiProvider,
+  objMap,
+  testChainConnectionConfigs,
+} from '@hyperlane-xyz/sdk';
+
+import { Erc20TokenConfig, HplERC20Config } from '../src/config';
 import { HplERC20Contracts } from '../src/contracts';
 import { HplERC20Deployer } from '../src/deploy';
 import { HplERC20 } from '../src/types';
