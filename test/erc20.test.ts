@@ -15,10 +15,10 @@ import {
   testChainConnectionConfigs,
 } from '@hyperlane-xyz/sdk';
 
-import { Erc20TokenConfig, HplERC20Config } from '../src/config';
-import { HplERC20Contracts } from '../src/contracts';
-import { HplERC20Deployer } from '../src/deploy';
-import { HplERC20 } from '../src/types';
+import { Erc20TokenConfig, HypERC20Config } from '../src/config';
+import { HypERC20Contracts } from '../src/contracts';
+import { HypERC20Deployer } from '../src/deploy';
+import { HypERC20 } from '../src/types';
 
 const localChain = 'test1';
 const remoteChain = 'test2';
@@ -29,19 +29,19 @@ const amount = 10;
 const testInterchainGasPayment = 123456789;
 
 const tokenConfig: Erc20TokenConfig = {
-  name: 'HplERC20',
-  symbol: 'HPL',
+  name: 'HypERC20',
+  symbol: 'HYP',
   totalSupply,
 };
 
-describe('HplERC20', async () => {
+describe('HypERC20', async () => {
   let owner: SignerWithAddress;
   let recipient: SignerWithAddress;
   let core: TestCoreApp;
-  let deployer: HplERC20Deployer<TestChainNames>;
-  let contracts: Record<TestChainNames, HplERC20Contracts>;
-  let local: HplERC20;
-  let remote: HplERC20;
+  let deployer: HypERC20Deployer<TestChainNames>;
+  let contracts: Record<TestChainNames, HypERC20Contracts>;
+  let local: HypERC20;
+  let remote: HypERC20;
 
   before(async () => {
     [owner, recipient] = await ethers.getSigners();
@@ -53,12 +53,12 @@ describe('HplERC20', async () => {
     const config = core.extendWithConnectionClientConfig(
       getChainToOwnerMap(testChainConnectionConfigs, owner.address),
     );
-    const configWithTokenInfo: ChainMap<TestChainNames, HplERC20Config> =
+    const configWithTokenInfo: ChainMap<TestChainNames, HypERC20Config> =
       objMap(config, (key) => ({
         ...config[key],
         ...tokenConfig,
       }));
-    deployer = new HplERC20Deployer(multiProvider, configWithTokenInfo, core);
+    deployer = new HypERC20Deployer(multiProvider, configWithTokenInfo, core);
     contracts = await deployer.deploy();
     local = contracts[localChain].router;
     remote = contracts[remoteChain].router;
@@ -132,7 +132,7 @@ describe('HplERC20', async () => {
 });
 
 const expectBalance = async (
-  token: HplERC20,
+  token: HypERC20,
   signer: SignerWithAddress,
   balance: number,
 ) => expect(await token.balanceOf(signer.address)).to.eq(balance);

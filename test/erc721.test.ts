@@ -15,10 +15,10 @@ import {
   testChainConnectionConfigs,
 } from '@hyperlane-xyz/sdk';
 
-import { Erc721TokenConfig, HplERC721Config } from '../src/config';
-import { HplERC721Contracts } from '../src/contracts';
-import { HplERC721Deployer } from '../src/deploy';
-import { HplERC721 } from '../src/types';
+import { Erc721TokenConfig, HypERC721Config } from '../src/config';
+import { HypERC721Contracts } from '../src/contracts';
+import { HypERC721Deployer } from '../src/deploy';
+import { HypERC721 } from '../src/types';
 
 const localChain = 'test1';
 const remoteChain = 'test2';
@@ -32,8 +32,8 @@ const tokenId4 = 40;
 const testInterchainGasPayment = 123456789;
 
 const tokenConfig: Erc721TokenConfig = {
-  name: 'HplERC721',
-  symbol: 'HPL',
+  name: 'HypERC721',
+  symbol: 'HYP',
   mintAmount,
 };
 
@@ -52,14 +52,14 @@ const configMap = {
   },
 };
 
-describe('HplERC721', async () => {
+describe('HypERC721', async () => {
   let owner: SignerWithAddress;
   let recipient: SignerWithAddress;
   let core: TestCoreApp;
-  let deployer: HplERC721Deployer<TestChainNames>;
-  let contracts: Record<TestChainNames, HplERC721Contracts>;
-  let local: HplERC721;
-  let remote: HplERC721;
+  let deployer: HypERC721Deployer<TestChainNames>;
+  let contracts: Record<TestChainNames, HypERC721Contracts>;
+  let local: HypERC721;
+  let remote: HypERC721;
 
   before(async () => {
     [owner, recipient] = await ethers.getSigners();
@@ -71,12 +71,12 @@ describe('HplERC721', async () => {
     const coreConfig = core.extendWithConnectionClientConfig(
       getChainToOwnerMap(testChainConnectionConfigs, owner.address),
     );
-    const configWithTokenInfo: ChainMap<TestChainNames, HplERC721Config> =
+    const configWithTokenInfo: ChainMap<TestChainNames, HypERC721Config> =
       objMap(coreConfig, (key) => ({
         ...coreConfig[key],
         ...configMap[key],
       }));
-    deployer = new HplERC721Deployer(multiProvider, configWithTokenInfo, core);
+    deployer = new HypERC721Deployer(multiProvider, configWithTokenInfo, core);
     contracts = await deployer.deploy();
     local = contracts[localChain].router;
     remote = contracts[remoteChain].router;
@@ -162,7 +162,7 @@ describe('HplERC721', async () => {
 });
 
 const expectBalance = async (
-  token: HplERC721,
+  token: HypERC721,
   signer: SignerWithAddress,
   balance: number,
 ) => expect(await token.balanceOf(signer.address)).to.eq(balance);

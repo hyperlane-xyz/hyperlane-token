@@ -9,7 +9,7 @@ import {ERC721EnumerableUpgradeable} from "@openzeppelin/contracts-upgradeable/t
  * @title Hyperlane Token that extends the ERC721 token standard to enable native interchain transfers.
  * @author Abacus Works
  */
-contract HplERC721 is Router, ERC721EnumerableUpgradeable {
+contract HypERC721 is Router, ERC721EnumerableUpgradeable {
     /**
      * @dev Emitted on `transferRemote` when a transfer message is dispatched.
      * @param destination The identifier of the destination chain.

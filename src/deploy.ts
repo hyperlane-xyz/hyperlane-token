@@ -6,34 +6,33 @@ import {
   MultiProvider,
 } from '@hyperlane-xyz/sdk';
 
+import { HypERC20Config, HypERC721Config } from './config';
 import {
-  HplERC20Contracts,
-  HplERC20Factories,
-  hplERC20Factories,
-  HplERC721Contracts,
-  hplERC721Factories,
-  HplERC721Factories,
+  HypERC20Contracts,
+  HypERC20Factories,
+  HypERC721Contracts,
+  HypERC721Factories,
+  hypERC20Factories,
+  hypERC721Factories,
 } from './contracts';
 
-import { HplERC20Config, HplERC721Config } from './config';
-
-export class HplERC20Deployer<
+export class HypERC20Deployer<
   Chain extends ChainName,
 > extends HyperlaneRouterDeployer<
   Chain,
-  HplERC20Config,
-  HplERC20Contracts,
-  HplERC20Factories
+  HypERC20Config,
+  HypERC20Contracts,
+  HypERC20Factories
 > {
   constructor(
     multiProvider: MultiProvider<Chain>,
-    configMap: ChainMap<Chain, HplERC20Config>,
+    configMap: ChainMap<Chain, HypERC20Config>,
     protected core: HyperlaneCore<Chain>,
   ) {
-    super(multiProvider, configMap, hplERC20Factories);
+    super(multiProvider, configMap, hypERC20Factories);
   }
 
-  async deployContracts(chain: Chain, config: HplERC20Config) {
+  async deployContracts(chain: Chain, config: HypERC20Config) {
     const router = await this.deployContract(chain, 'router', []);
     await router.initialize(
       config.connectionManager,
@@ -48,23 +47,23 @@ export class HplERC20Deployer<
   }
 }
 
-export class HplERC721Deployer<
+export class HypERC721Deployer<
   Chain extends ChainName,
 > extends HyperlaneRouterDeployer<
   Chain,
-  HplERC721Config,
-  HplERC721Contracts,
-  HplERC721Factories
+  HypERC721Config,
+  HypERC721Contracts,
+  HypERC721Factories
 > {
   constructor(
     multiProvider: MultiProvider<Chain>,
-    configMap: ChainMap<Chain, HplERC721Config>,
+    configMap: ChainMap<Chain, HypERC721Config>,
     protected core: HyperlaneCore<Chain>,
   ) {
-    super(multiProvider, configMap, hplERC721Factories);
+    super(multiProvider, configMap, hypERC721Factories);
   }
 
-  async deployContracts(chain: Chain, config: HplERC721Config) {
+  async deployContracts(chain: Chain, config: HypERC721Config) {
     const router = await this.deployContract(chain, 'router', []);
     await router.initialize(
       config.connectionManager,

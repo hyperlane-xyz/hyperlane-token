@@ -1,5 +1,6 @@
-import { RouterConfig } from '@hyperlane-xyz/sdk';
 import { ethers } from 'ethers';
+
+import { RouterConfig } from '@hyperlane-xyz/sdk';
 
 export type Erc20TokenConfig = {
   name: string;
@@ -7,7 +8,7 @@ export type Erc20TokenConfig = {
   totalSupply: ethers.BigNumberish;
 };
 
-export type HplERC20Config = RouterConfig & Erc20TokenConfig;
+export type HypERC20Config = RouterConfig & Erc20TokenConfig;
 
 export type Erc721TokenConfig = {
   name: string;
@@ -15,4 +16,4 @@ export type Erc721TokenConfig = {
   mintAmount: ethers.BigNumberish;
 };
 
-export type HplERC721Config = RouterConfig & Erc721TokenConfig;
+export type HypERC721Config = RouterConfig & Erc721TokenConfig;
