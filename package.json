@@ -54,7 +54,7 @@
     "coverage": "hardhat coverage",
     "lint": "eslint . --ext .ts",
     "prettier": "prettier --write ./contracts ./test",
-    "test": "hardhat test ./test/**/*.test.ts"
+    "test": "hardhat test ./test/*.test.ts"
   },
   "types": "dist/index.d.ts"
 }
