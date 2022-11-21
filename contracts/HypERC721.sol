@@ -36,14 +36,12 @@ contract HypERC721 is Router, ERC721EnumerableUpgradeable {
 
     /**
      * @notice Initializes the Hyperlane router, ERC721 metadata, and mints initial supply to deployer.
-     * @param _abacusConnectionManager The address of the connection manager contract.
      * @param _interchainGasPaymaster The address of the interchain gas paymaster contract.
      * @param _mintAmount The amount of NFTs to mint to `msg.sender`.
      * @param _name The name of the token.
      * @param _symbol The symbol of the token.
      */
     function initialize(
-        address _abacusConnectionManager,
         address _interchainGasPaymaster,
         uint256 _mintAmount,
         string memory _name,
@@ -51,8 +49,6 @@ contract HypERC721 is Router, ERC721EnumerableUpgradeable {
     ) external initializer {
         // Set ownable to sender
         _transferOwnership(msg.sender);
-        // Set ACM contract address
-        _setAbacusConnectionManager(_abacusConnectionManager);
         // Set IGP contract address
         _setInterchainGasPaymaster(_interchainGasPaymaster);
 

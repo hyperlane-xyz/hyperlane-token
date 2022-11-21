@@ -2,6 +2,7 @@
 pragma solidity ^0.8.13;
 
 import {Router} from "@hyperlane-xyz/core/contracts/Router.sol";
+import {OwnableSpecifiesISM} from "@hyperlane-xyz/core/contracts/OwnableSpecifiesISM.sol";
 
 import {ERC20Upgradeable} from "@openzeppelin/contracts-upgradeable/token/ERC20/ERC20Upgradeable.sol";
 
@@ -10,7 +11,7 @@ import {ERC20Upgradeable} from "@openzeppelin/contracts-upgradeable/token/ERC20/
  * @author Abacus Works
  * @dev Supply on each chain is not constant but the aggregate supply across all chains is.
  */
-contract HypERC20 is Router, ERC20Upgradeable {
+contract HypERC20 is Router, ERC20Upgradeable, OwnableSpecifiesISM {
     /**
      * @dev Emitted on `transferRemote` when a transfer message is dispatched.
      * @param destination The identifier of the destination chain.
@@ -37,23 +38,21 @@ contract HypERC20 is Router, ERC20Upgradeable {
 
     /**
      * @notice Initializes the Hyperlane router, ERC20 metadata, and mints initial supply to deployer.
-     * @param _abacusConnectionManager The address of the connection manager contract.
      * @param _interchainGasPaymaster The address of the interchain gas paymaster contract.
+     * @param _interchainSecurityModule The address of the interchain security module contract.
      * @param _totalSupply The initial supply of the token.
      * @param _name The name of the token.
      * @param _symbol The symbol of the token.
      */
     function initialize(
-        address _abacusConnectionManager,
         address _interchainGasPaymaster,
+        address _interchainSecurityModule,
         uint256 _totalSupply,
         string memory _name,
         string memory _symbol
     ) external initializer {
-        // Set ownable to sender
-        _transferOwnership(msg.sender);
-        // Set ACM contract address
-        _setAbacusConnectionManager(_abacusConnectionManager);
+        // Set ISM contract address and transfer ownership to `msg.sender`
+        __OwnableSpecifiesISM_init(_interchainSecurityModule);
         // Set IGP contract address
         _setInterchainGasPaymaster(_interchainGasPaymaster);
 
@@ -78,7 +77,7 @@ contract HypERC20 is Router, ERC20Upgradeable {
         _burn(msg.sender, _amount);
         _dispatchWithGas(
             _destination,
-            abi.encode(_recipient, _amount),
+            abi.encodePacked(_recipient, _amount),
             msg.value
         );
         emit SentTransferRemote(_destination, _recipient, _amount);
@@ -95,10 +94,8 @@ contract HypERC20 is Router, ERC20Upgradeable {
         bytes32,
         bytes calldata _message
     ) internal override {
-        (address recipient, uint256 amount) = abi.decode(
-            _message,
-            (address, uint256)
-        );
+        address recipient = address(bytes20(_message[0:20]));
+        uint256 amount = uint256(bytes32(_message[20:52]));
         _mint(recipient, amount);
         emit ReceivedTransferRemote(_origin, recipient, amount);
     }
