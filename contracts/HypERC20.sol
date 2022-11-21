@@ -55,7 +55,7 @@ contract HypERC20 is Router, ERC20Upgradeable, OwnableSpecifiesISM {
         __OwnableSpecifiesISM_init(_interchainSecurityModule);
         // Set IGP contract address
         _setInterchainGasPaymaster(_interchainGasPaymaster);
-
+        // Initialize ERC20 metadata
         __ERC20_init(_name, _symbol);
         _mint(msg.sender, _totalSupply);
     }
@@ -74,13 +74,17 @@ contract HypERC20 is Router, ERC20Upgradeable, OwnableSpecifiesISM {
         address _recipient,
         uint256 _amount
     ) external payable {
-        _burn(msg.sender, _amount);
+        _transferFromSender(_amount);
         _dispatchWithGas(
             _destination,
             abi.encodePacked(_recipient, _amount),
             msg.value
         );
         emit SentTransferRemote(_destination, _recipient, _amount);
+    }
+
+    function _transferFromSender(uint256 _amount) internal virtual {
+        _burn(msg.sender, _amount);
     }
 
     /**
@@ -96,7 +100,11 @@ contract HypERC20 is Router, ERC20Upgradeable, OwnableSpecifiesISM {
     ) internal override {
         address recipient = address(bytes20(_message[0:20]));
         uint256 amount = uint256(bytes32(_message[20:52]));
-        _mint(recipient, amount);
+        _transferTo(recipient, amount);
         emit ReceivedTransferRemote(_origin, recipient, amount);
+    }
+
+    function _transferTo(address _recipient, uint256 _amount) internal virtual {
+        _mint(_recipient, _amount);
     }
 }
