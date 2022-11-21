@@ -28,7 +28,11 @@ contract HypERC20 is ERC20Router, ERC20Upgradeable {
         string memory _name,
         string memory _symbol
     ) external initializer {
-        __HyperlaneConnectionClient_initialize(_mailbox, _interchainGasPaymaster, _interchainSecurityModule);
+        __HyperlaneConnectionClient_initialize(
+            _mailbox,
+            _interchainGasPaymaster,
+            _interchainSecurityModule
+        );
 
         // Initialize ERC20 metadata
         __ERC20_init(_name, _symbol);
@@ -39,7 +43,10 @@ contract HypERC20 is ERC20Router, ERC20Upgradeable {
         _burn(msg.sender, _amount);
     }
 
-    function _transferTo(address _recipient, uint256 _amount) internal override {
+    function _transferTo(address _recipient, uint256 _amount)
+        internal
+        override
+    {
         _mint(_recipient, _amount);
     }
 }
