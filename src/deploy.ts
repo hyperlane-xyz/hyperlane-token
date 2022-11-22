@@ -6,7 +6,7 @@ import {
   MultiProvider,
 } from '@hyperlane-xyz/sdk';
 
-import { HypERC20Config, HypERC721Config } from './config';
+import { HypERC20Config, HypERC721Config, HypWERC20Config } from './config';
 import {
   HypERC20Contracts,
   HypERC20Factories,
@@ -17,26 +17,29 @@ import {
 } from './contracts';
 import { HypWERC20__factory, HypERC20__factory } from './types';
 
+const isCollateralConfig = (config: HypERC20Config | HypWERC20Config): config is HypWERC20Config => {
+  return (config as HypWERC20Config).token !== undefined;
+}
+
 export class HypERC20Deployer<
-  Chain extends ChainName,
+  Chain extends ChainName
 > extends HyperlaneRouterDeployer<
   Chain,
-  HypERC20Config,
+  HypERC20Config | HypWERC20Config,
   HypERC20Contracts,
   HypERC20Factories
 > {
   constructor(
     multiProvider: MultiProvider<Chain>,
-    configMap: ChainMap<Chain, HypERC20Config>,
-    protected core: HyperlaneCore<Chain>,
-    protected collateral?: { chain: Chain, token: string }
+    configMap: ChainMap<Chain, HypERC20Config | HypWERC20Config>,
+    protected core: HyperlaneCore<Chain>
   ) {
     super(multiProvider, configMap, hypERC20Factories);
   }
 
-  async deployContracts(chain: Chain, config: HypERC20Config) {
-    if (chain === this.collateral?.chain) {
-      const router = await new HypWERC20__factory().deploy(this.collateral.token);
+  async deployContracts(_: Chain, config: HypERC20Config | HypWERC20Config) {
+    if (isCollateralConfig(config))  {
+      const router = await new HypWERC20__factory().deploy(config.token);
       await router.initialize(
         config.mailbox,
         config.interchainGasPaymaster,

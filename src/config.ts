@@ -10,6 +10,8 @@ export type Erc20TokenConfig = {
 
 export type HypERC20Config = RouterConfig & Erc20TokenConfig;
 
+export type HypWERC20Config = RouterConfig & { token: string };
+
 export type Erc721TokenConfig = {
   name: string;
   symbol: string;
