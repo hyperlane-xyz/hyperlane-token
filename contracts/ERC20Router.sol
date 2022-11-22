@@ -2,6 +2,7 @@
 pragma solidity ^0.8.13;
 
 import {Router} from "@hyperlane-xyz/core/contracts/Router.sol";
+import {Message} from "./libs/Message.sol";
 
 /**
  * @title Hyperlane Token that extends the ERC20 token standard to enable native interchain transfers.
@@ -9,6 +10,8 @@ import {Router} from "@hyperlane-xyz/core/contracts/Router.sol";
  * @dev Supply on each chain is not constant but the aggregate supply across all chains is.
  */
 abstract contract ERC20Router is Router {
+    using Message for bytes;
+
     /**
      * @dev Emitted on `transferRemote` when a transfer message is dispatched.
      * @param destination The identifier of the destination chain.
@@ -50,7 +53,7 @@ abstract contract ERC20Router is Router {
         _transferFromSender(_amount);
         _dispatchWithGas(
             _destination,
-            abi.encodePacked(_recipient, _amount),
+            Message.format(_recipient, _amount),
             msg.value
         );
         emit SentTransferRemote(_destination, _recipient, _amount);
@@ -69,8 +72,8 @@ abstract contract ERC20Router is Router {
         bytes32,
         bytes calldata _message
     ) internal override {
-        address recipient = address(bytes20(_message[0:20]));
-        uint256 amount = uint256(bytes32(_message[20:52]));
+        address recipient = _message.recipient();
+        uint256 amount = _message.amount();
         _transferTo(recipient, amount);
         emit ReceivedTransferRemote(_origin, recipient, amount);
     }

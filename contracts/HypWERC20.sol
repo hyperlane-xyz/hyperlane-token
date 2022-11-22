@@ -10,7 +10,6 @@ import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
  * @author Abacus Works
  */
 contract HypWERC20 is ERC20Router {
-    // TODO: consider implementing ERC20 interface and passing through balanceOf, etc.
     IERC20 public immutable wrappedToken;
 
     constructor(address erc20) {

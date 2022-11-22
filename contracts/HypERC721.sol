@@ -2,6 +2,7 @@
 pragma solidity ^0.8.13;
 
 import {Router} from "@hyperlane-xyz/core/contracts/Router.sol";
+import {Message} from "./libs/Message.sol";
 
 import {ERC721EnumerableUpgradeable} from "@openzeppelin/contracts-upgradeable/token/ERC721/extensions/ERC721EnumerableUpgradeable.sol";
 
@@ -10,6 +11,8 @@ import {ERC721EnumerableUpgradeable} from "@openzeppelin/contracts-upgradeable/t
  * @author Abacus Works
  */
 contract HypERC721 is Router, ERC721EnumerableUpgradeable {
+    using Message for bytes;
+
     /**
      * @dev Emitted on `transferRemote` when a transfer message is dispatched.
      * @param destination The identifier of the destination chain.
@@ -51,7 +54,11 @@ contract HypERC721 is Router, ERC721EnumerableUpgradeable {
         string memory _name,
         string memory _symbol
     ) external initializer {
-        __HyperlaneConnectionClient_initialize(_mailbox, _interchainGasPaymaster, _interchainSecurityModule);
+        __HyperlaneConnectionClient_initialize(
+            _mailbox,
+            _interchainGasPaymaster,
+            _interchainSecurityModule
+        );
 
         __ERC721_init(_name, _symbol);
         for (uint256 i = 0; i < _mintAmount; i++) {
@@ -76,7 +83,7 @@ contract HypERC721 is Router, ERC721EnumerableUpgradeable {
         _burn(_tokenId);
         _dispatchWithGas(
             _destination,
-            abi.encode(_recipient, _tokenId),
+            Message.format(_recipient, _tokenId),
             msg.value
         );
         emit SentTransferRemote(_destination, _recipient, _tokenId);
@@ -93,10 +100,8 @@ contract HypERC721 is Router, ERC721EnumerableUpgradeable {
         bytes32,
         bytes calldata _message
     ) internal override {
-        (address recipient, uint256 tokenId) = abi.decode(
-            _message,
-            (address, uint256)
-        );
+        address recipient = _message.recipient();
+        uint256 tokenId = _message.tokenId();
         _mint(recipient, tokenId);
         emit ReceivedTransferRemote(_origin, recipient, tokenId);
     }
