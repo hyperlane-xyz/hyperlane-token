@@ -1,19 +1,19 @@
 import { RouterContracts, RouterFactories } from '@hyperlane-xyz/sdk';
 
 import {
-  HypERC20,
+  ERC20Router,
   HypERC20__factory,
   HypERC721,
   HypERC721__factory,
 } from './types';
 
-export type HypERC20Factories = RouterFactories<HypERC20>;
+export type HypERC20Factories = RouterFactories<ERC20Router>;
 
 export const hypERC20Factories: HypERC20Factories = {
-  router: new HypERC20__factory(),
+  router: new HypERC20__factory(), // for non-collateral chains
 };
 
-export type HypERC20Contracts = RouterContracts<HypERC20>;
+export type HypERC20Contracts = RouterContracts<ERC20Router>;
 
 export type HypERC721Factories = RouterFactories<HypERC721>;
 
