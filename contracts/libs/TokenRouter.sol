@@ -10,7 +10,7 @@ import {Message} from "./Message.sol";
  * @author Abacus Works
  * @dev Supply on each chain is not constant but the aggregate supply across all chains is.
  */
-abstract contract TransferRemoteRouter is Router {
+abstract contract TokenRouter is Router {
     using TypeCasts for bytes32;
     using Message for bytes;
 

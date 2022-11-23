@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: Apache-2.0
 pragma solidity ^0.8.13;
 
-import {TransferRemoteRouter} from "./libs/TransferRemoteRouter.sol";
+import {TokenRouter} from "./libs/TokenRouter.sol";
 
 import {ERC721EnumerableUpgradeable} from "@openzeppelin/contracts-upgradeable/token/ERC721/extensions/ERC721EnumerableUpgradeable.sol";
 
@@ -9,7 +9,7 @@ import {ERC721EnumerableUpgradeable} from "@openzeppelin/contracts-upgradeable/t
  * @title Hyperlane Token that extends the ERC721 token standard to enable native interchain transfers.
  * @author Abacus Works
  */
-contract HypERC721 is ERC721EnumerableUpgradeable, TransferRemoteRouter {
+contract HypERC721 is ERC721EnumerableUpgradeable, TokenRouter {
     /**
      * @notice Initializes the Hyperlane router, ERC721 metadata, and mints initial supply to deployer.
      * @param _mailbox The address of the mailbox contract.

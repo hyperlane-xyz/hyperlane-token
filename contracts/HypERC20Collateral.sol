@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: Apache-2.0
 pragma solidity ^0.8.13;
 
-import {TransferRemoteRouter} from "./libs/TransferRemoteRouter.sol";
+import {TokenRouter} from "./libs/TokenRouter.sol";
 
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
@@ -9,7 +9,7 @@ import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
  * @title Collateralize ERC20 token and route messages to HypERC20 tokens.
  * @author Abacus Works
  */
-contract HypERC20Collateral is TransferRemoteRouter {
+contract HypERC20Collateral is TokenRouter {
     IERC20 public immutable wrappedToken;
 
     constructor(address erc20) {
