@@ -2,14 +2,16 @@
 pragma solidity ^0.8.13;
 
 import {Router} from "@hyperlane-xyz/core/contracts/Router.sol";
-import {Message} from "./libs/Message.sol";
+import {TypeCasts} from "@hyperlane-xyz/core/contracts/libs/TypeCasts.sol";
+import {Message} from "./Message.sol";
 
 /**
  * @title Hyperlane Token that extends the ERC20 token standard to enable native interchain transfers.
  * @author Abacus Works
  * @dev Supply on each chain is not constant but the aggregate supply across all chains is.
  */
-abstract contract ERC20Router is Router {
+abstract contract TransferRemoteRouter is Router {
+    using TypeCasts for bytes32;
     using Message for bytes;
 
     /**
@@ -20,7 +22,7 @@ abstract contract ERC20Router is Router {
      */
     event SentTransferRemote(
         uint32 indexed destination,
-        address indexed recipient,
+        bytes32 indexed recipient,
         uint256 amount
     );
 
@@ -32,7 +34,7 @@ abstract contract ERC20Router is Router {
      */
     event ReceivedTransferRemote(
         uint32 indexed origin,
-        address indexed recipient,
+        bytes32 indexed recipient,
         uint256 amount
     );
 
@@ -47,7 +49,7 @@ abstract contract ERC20Router is Router {
      */
     function transferRemote(
         uint32 _destination,
-        address _recipient,
+        bytes32 _recipient,
         uint256 _amount
     ) external payable {
         _transferFromSender(_amount);
@@ -72,9 +74,9 @@ abstract contract ERC20Router is Router {
         bytes32,
         bytes calldata _message
     ) internal override {
-        address recipient = _message.recipient();
+        bytes32 recipient = _message.recipient();
         uint256 amount = _message.amount();
-        _transferTo(recipient, amount);
+        _transferTo(recipient.bytes32ToAddress(), amount);
         emit ReceivedTransferRemote(_origin, recipient, amount);
     }
 

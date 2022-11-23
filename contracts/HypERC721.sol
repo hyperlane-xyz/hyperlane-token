@@ -1,8 +1,7 @@
 // SPDX-License-Identifier: Apache-2.0
 pragma solidity ^0.8.13;
 
-import {Router} from "@hyperlane-xyz/core/contracts/Router.sol";
-import {Message} from "./libs/Message.sol";
+import {TransferRemoteRouter} from "./libs/TransferRemoteRouter.sol";
 
 import {ERC721EnumerableUpgradeable} from "@openzeppelin/contracts-upgradeable/token/ERC721/extensions/ERC721EnumerableUpgradeable.sol";
 
@@ -10,33 +9,7 @@ import {ERC721EnumerableUpgradeable} from "@openzeppelin/contracts-upgradeable/t
  * @title Hyperlane Token that extends the ERC721 token standard to enable native interchain transfers.
  * @author Abacus Works
  */
-contract HypERC721 is Router, ERC721EnumerableUpgradeable {
-    using Message for bytes;
-
-    /**
-     * @dev Emitted on `transferRemote` when a transfer message is dispatched.
-     * @param destination The identifier of the destination chain.
-     * @param recipient The address of the recipient on the destination chain.
-     * @param tokenId The tokenId of tokens burnt on the origin chain.
-     */
-    event SentTransferRemote(
-        uint32 indexed destination,
-        address indexed recipient,
-        uint256 tokenId
-    );
-
-    /**
-     * @dev Emitted on `_handle` when a transfer message is processed.
-     * @param origin The identifier of the origin chain.
-     * @param recipient The address of the recipient on the destination chain.
-     * @param tokenId The tokenId of tokens minted on the destination chain.
-     */
-    event ReceivedTransferRemote(
-        uint32 indexed origin,
-        address indexed recipient,
-        uint256 tokenId
-    );
-
+contract HypERC721 is ERC721EnumerableUpgradeable, TransferRemoteRouter {
     /**
      * @notice Initializes the Hyperlane router, ERC721 metadata, and mints initial supply to deployer.
      * @param _mailbox The address of the mailbox contract.
@@ -66,43 +39,15 @@ contract HypERC721 is Router, ERC721EnumerableUpgradeable {
         }
     }
 
-    /**
-     * @notice Transfers `_tokenId` of tokens from `msg.sender` to `_recipient` on the `_destination` chain.
-     * @dev Burns `_tokenId` of tokens from `msg.sender` on the origin chain and dispatches
-     *      message to the `destination` chain to mint `_tokenId` of tokens to `recipient`.
-     * @dev Emits `SentTransferRemote` event on the origin chain.
-     * @param _destination The identifier of the destination chain.
-     * @param _recipient The address of the recipient on the destination chain.
-     * @param _tokenId The tokenId of tokens to be sent to the remote recipient.
-     */
-    function transferRemote(
-        uint32 _destination,
-        address _recipient,
-        uint256 _tokenId
-    ) external payable {
+    function _transferFromSender(uint256 _tokenId) internal override {
+        require(ownerOf(_tokenId) == msg.sender, "!owner");
         _burn(_tokenId);
-        _dispatchWithGas(
-            _destination,
-            Message.format(_recipient, _tokenId),
-            msg.value
-        );
-        emit SentTransferRemote(_destination, _recipient, _tokenId);
     }
 
-    /**
-     * @dev Mints tokens to recipient when router receives transfer message.
-     * @dev Emits `ReceivedTransferRemote` event on the destination chain.
-     * @param _origin The identifier of the origin chain.
-     * @param _message The encoded remote transfer message containing the recipient address and tokenId.
-     */
-    function _handle(
-        uint32 _origin,
-        bytes32,
-        bytes calldata _message
-    ) internal override {
-        address recipient = _message.recipient();
-        uint256 tokenId = _message.tokenId();
-        _mint(recipient, tokenId);
-        emit ReceivedTransferRemote(_origin, recipient, tokenId);
+    function _transferTo(address _recipient, uint256 _tokenId)
+        internal
+        override
+    {
+        _mint(_recipient, _tokenId);
     }
 }
