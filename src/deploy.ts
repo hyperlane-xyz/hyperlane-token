@@ -19,7 +19,7 @@ import {
 import { HypERC20Collateral__factory, HypERC20__factory, HypERC721Collateral__factory, HypERC721__factory } from './types';
 
 export class HypERC20Deployer<
-  Chain extends ChainName
+  Chain extends ChainName // inferred from configured chains passed to constructor
 > extends HyperlaneRouterDeployer<
   Chain,
   HypERC20Config | HypERC20CollateralConfig,
@@ -86,7 +86,7 @@ export class HypERC721Deployer<
       const router = await this.deployContractFromFactory(
         chain,
         new HypERC721Collateral__factory(),
-        'HypERC721',
+        'HypERC721Collateral',
         [config.token],
       );
       await connection.handleTx(

@@ -15,10 +15,11 @@ import {
   testChainConnectionConfigs,
 } from '@hyperlane-xyz/sdk';
 
-import { Erc20TokenConfig, HypERC20Config } from '../src/config';
+import { HypERC20Config, TokenConfig } from '../src/config';
 import { HypERC20Contracts } from '../src/contracts';
 import { HypERC20Deployer } from '../src/deploy';
-import { HypERC20 } from '../src/types';
+import { HypERC20, IERC20 } from '../src/types';
+import { utils } from '@hyperlane-xyz/utils';
 
 const localChain = 'test1';
 const remoteChain = 'test2';
@@ -28,7 +29,7 @@ const totalSupply = 3000;
 const amount = 10;
 const testInterchainGasPayment = 123456789;
 
-const tokenConfig: Erc20TokenConfig = {
+const tokenConfig: TokenConfig = {
   name: 'HypERC20',
   symbol: 'HYP',
   totalSupply,
@@ -60,13 +61,14 @@ describe('HypERC20', async () => {
       }));
     deployer = new HypERC20Deployer(multiProvider, configWithTokenInfo, core);
     contracts = await deployer.deploy();
-    local = contracts[localChain].router;
-    remote = contracts[remoteChain].router;
+    local = contracts[localChain].router as HypERC20;
+    remote = contracts[remoteChain].router as HypERC20;
   });
 
   it('should not be initializable again', async () => {
     await expect(
       local.initialize(
+        ethers.constants.AddressZero,
         ethers.constants.AddressZero,
         ethers.constants.AddressZero,
         0,
@@ -92,7 +94,7 @@ describe('HypERC20', async () => {
   });
 
   it('should allow for remote transfers', async () => {
-    await local.transferRemote(remoteDomain, recipient.address, amount);
+    await local.transferRemote(remoteDomain, utils.addressToBytes32(recipient.address), amount);
 
     await expectBalance(local, recipient, amount);
     await expectBalance(local, owner, totalSupply - amount * 2);
@@ -108,21 +110,18 @@ describe('HypERC20', async () => {
   });
 
   it('allows interchain gas payment for remote transfers', async () => {
-    const outbox = core.getMailboxPair(localChain, remoteChain).originOutbox;
     const interchainGasPaymaster =
       core.contractsMap[localChain].interchainGasPaymaster.contract;
-    const leafIndex = await outbox.count();
     await expect(
-      local.transferRemote(remoteDomain, recipient.address, amount, {
+      local.transferRemote(remoteDomain, utils.addressToBytes32(recipient.address), amount, {
         value: testInterchainGasPayment,
       }),
     )
-      .to.emit(interchainGasPaymaster, 'GasPayment')
-      .withArgs(outbox.address, leafIndex, testInterchainGasPayment);
+      .to.emit(interchainGasPaymaster, 'GasPayment');
   });
 
   it('should emit TransferRemote events', async () => {
-    expect(await local.transferRemote(remoteDomain, recipient.address, amount))
+    expect(await local.transferRemote(remoteDomain, utils.addressToBytes32(recipient.address), amount))
       .to.emit(local, 'SentTransferRemote')
       .withArgs(remoteDomain, recipient.address, amount);
     expect(await core.processMessages())
@@ -132,7 +131,7 @@ describe('HypERC20', async () => {
 });
 
 const expectBalance = async (
-  token: HypERC20,
+  token: IERC20,
   signer: SignerWithAddress,
   balance: number,
 ) => expect(await token.balanceOf(signer.address)).to.eq(balance);
