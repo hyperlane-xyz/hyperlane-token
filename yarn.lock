@@ -1218,6 +1218,7 @@ __metadata:
   dependencies:
     "@hyperlane-xyz/core": 0.5.4-3
     "@hyperlane-xyz/sdk": 0.5.4-3
+    "@hyperlane-xyz/utils": 0.5.4-3
     "@nomiclabs/hardhat-ethers": ^2.0.5
     "@nomiclabs/hardhat-waffle": ^2.0.2
     "@openzeppelin/contracts-upgradeable": ^4.6.0
