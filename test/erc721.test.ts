@@ -134,6 +134,12 @@ describe('HypERC721', async () => {
     await expectBalance(remote, owner, 0);
   });
 
+  it('should prevent remote transfer of unowned id', async () => {
+    await expect(
+      local.connect(recipient.address).transferRemote(remoteDomain, utils.addressToBytes32(recipient.address), tokenId2)
+    ).to.be.revertedWith('!owner');
+  });
+
   it('allows interchain gas payment for remote transfers', async () => {
     const interchainGasPaymaster =
       core.contractsMap[localChain].interchainGasPaymaster.contract;

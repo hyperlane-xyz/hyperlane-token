@@ -120,6 +120,12 @@ describe('HypERC20', async () => {
       .to.emit(interchainGasPaymaster, 'GasPayment');
   });
 
+  it('should prevent remote transfer of unowned balance', async () => {
+    await expect(
+      local.connect(recipient.address).transferRemote(remoteDomain, utils.addressToBytes32(recipient.address), amount)
+    ).to.be.revertedWith('ERC20: burn amount exceeds balance');
+  });
+
   it('should emit TransferRemote events', async () => {
     expect(await local.transferRemote(remoteDomain, utils.addressToBytes32(recipient.address), amount))
       .to.emit(local, 'SentTransferRemote')
