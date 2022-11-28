@@ -2,20 +2,21 @@ import { ethers } from 'ethers';
 
 import { RouterConfig } from '@hyperlane-xyz/sdk';
 
-export type Erc20TokenConfig = {
+export type TokenConfig = {
   name: string;
   symbol: string;
   totalSupply: ethers.BigNumberish;
 };
+export type CollateralConfig = {
+  token: string;
+}
 
-export type HypERC20Config = RouterConfig & Erc20TokenConfig;
+export const isCollateralConfig = (config: RouterConfig & TokenConfig | CollateralConfig): config is RouterConfig & CollateralConfig => {
+  return (config as CollateralConfig).token !== undefined;
+}
 
-export type HypWERC20Config = RouterConfig & { token: string };
+export type HypERC20Config = RouterConfig & TokenConfig;
+export type HypERC20CollateralConfig = RouterConfig & CollateralConfig;
 
-export type Erc721TokenConfig = {
-  name: string;
-  symbol: string;
-  mintAmount: ethers.BigNumberish;
-};
-
-export type HypERC721Config = RouterConfig & Erc721TokenConfig;
+export type HypERC721Config = RouterConfig & TokenConfig;
+export type HypERC721CollateralConfig = RouterConfig & CollateralConfig;

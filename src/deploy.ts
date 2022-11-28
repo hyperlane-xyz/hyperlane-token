@@ -1,94 +1,118 @@
+import { ethers } from 'ethers';
+
 import {
-  ChainMap,
   ChainName,
-  HyperlaneCore,
   HyperlaneRouterDeployer,
-  MultiProvider,
 } from '@hyperlane-xyz/sdk';
 
-import { HypERC20Config, HypERC721Config, HypWERC20Config } from './config';
+import {
+  HypERC20CollateralConfig,
+  HypERC20Config,
+  HypERC721Config,
+  isCollateralConfig,
+  HypERC721CollateralConfig,
+} from './config';
 import {
   HypERC20Contracts,
-  HypERC20Factories,
   HypERC721Contracts,
-  HypERC721Factories,
-  hypERC20Factories,
-  hypERC721Factories,
 } from './contracts';
-import { HypWERC20__factory, HypERC20__factory } from './types';
-
-const isCollateralConfig = (config: HypERC20Config | HypWERC20Config): config is HypWERC20Config => {
-  return (config as HypWERC20Config).token !== undefined;
-}
+import { HypERC20Collateral__factory, HypERC20__factory, HypERC721Collateral__factory, HypERC721__factory } from './types';
 
 export class HypERC20Deployer<
   Chain extends ChainName
 > extends HyperlaneRouterDeployer<
   Chain,
-  HypERC20Config | HypWERC20Config,
+  HypERC20Config | HypERC20CollateralConfig,
   HypERC20Contracts,
-  HypERC20Factories
+  any
 > {
-  constructor(
-    multiProvider: MultiProvider<Chain>,
-    configMap: ChainMap<Chain, HypERC20Config | HypWERC20Config>,
-    protected core: HyperlaneCore<Chain>
+  async deployContracts(
+    chain: Chain,
+    config: HypERC20Config | HypERC20CollateralConfig,
   ) {
-    super(multiProvider, configMap, hypERC20Factories);
-  }
-
-  async deployContracts(_: Chain, config: HypERC20Config | HypWERC20Config) {
-    if (isCollateralConfig(config))  {
-      const router = await new HypWERC20__factory().deploy(config.token);
-      await router.initialize(
-        config.mailbox,
-        config.interchainGasPaymaster,
-        config.interchainSecurityModule
-      )
+    const ism = config.interchainSecurityModule ?? ethers.constants.AddressZero;
+    const connection = this.multiProvider.getChainConnection(chain);
+    if (isCollateralConfig(config)) {
+      const router = await this.deployContractFromFactory(
+        chain,
+        new HypERC20Collateral__factory(),
+        'HypERC20Collateral',
+        [config.token],
+      );
+      await connection.handleTx(
+        router.initialize(
+          config.mailbox,
+          config.interchainGasPaymaster,
+          ism
+        ),
+      );
       return { router };
     } else {
-      const router = await new HypERC20__factory().deploy();
-      await router.initialize(
+      const router = await this.deployContractFromFactory(
+        chain,
+        new HypERC20__factory(),
+        'HypERC20',
+        [],
+      );
+      await connection.handleTx(router.initialize(
         config.mailbox,
         config.interchainGasPaymaster,
-        config.interchainSecurityModule,
+        ism,
         config.totalSupply,
         config.name,
         config.symbol,
-      );
-      return { router }
+      ));
+      return { router };
     }
   }
 }
 
+// TODO: dedupe?
 export class HypERC721Deployer<
-  Chain extends ChainName,
+  Chain extends ChainName
 > extends HyperlaneRouterDeployer<
   Chain,
-  HypERC721Config,
+  HypERC721Config | HypERC721CollateralConfig,
   HypERC721Contracts,
-  HypERC721Factories
+  any
 > {
-  constructor(
-    multiProvider: MultiProvider<Chain>,
-    configMap: ChainMap<Chain, HypERC721Config>,
-    protected core: HyperlaneCore<Chain>,
+  async deployContracts(
+    chain: Chain,
+    config: HypERC721Config | HypERC721CollateralConfig,
   ) {
-    super(multiProvider, configMap, hypERC721Factories);
-  }
-
-  async deployContracts(chain: Chain, config: HypERC721Config) {
-    const router = await this.deployContract(chain, 'router', []);
-    await router.initialize(
-      config.mailbox,
-      config.interchainGasPaymaster,
-      config.interchainSecurityModule,
-      config.mintAmount,
-      config.name,
-      config.symbol,
-    );
-    return {
-      router,
-    };
+    const ism = config.interchainSecurityModule ?? ethers.constants.AddressZero;
+    const connection = this.multiProvider.getChainConnection(chain);
+    if (isCollateralConfig(config)) {
+      const router = await this.deployContractFromFactory(
+        chain,
+        new HypERC721Collateral__factory(),
+        'HypERC721',
+        [config.token],
+      );
+      await connection.handleTx(
+        router.initialize(
+          config.mailbox,
+          config.interchainGasPaymaster,
+          ism
+        ),
+      );
+      return { router };
+    } else {
+      const router = await this.deployContractFromFactory(
+        chain,
+        new HypERC721__factory(),
+        'HypERC721',
+        [],
+      );
+      await connection.handleTx(router.initialize(
+        config.mailbox,
+        config.interchainGasPaymaster,
+        ism,
+        config.totalSupply,
+        config.name,
+        config.symbol,
+      ));
+      return { router };
+    }
   }
 }
