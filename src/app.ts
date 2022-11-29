@@ -30,10 +30,14 @@ export class HypERC721App<Chain extends ChainName> extends HyperlaneApp<
   Chain
 > {
   getSecurityModules = () =>
-  promiseObjAll(objMap(this.contractsMap, (_, contracts) =>
-      contracts.router.interchainSecurityModule(),
-    ));
+    promiseObjAll(
+      objMap(this.contractsMap, (_, contracts) =>
+        contracts.router.interchainSecurityModule(),
+      ),
+    );
 
   getOwners = () =>
-  promiseObjAll(objMap(this.contractsMap, (_, contracts) => contracts.router.owner()));
+    promiseObjAll(
+      objMap(this.contractsMap, (_, contracts) => contracts.router.owner()),
+    );
 }

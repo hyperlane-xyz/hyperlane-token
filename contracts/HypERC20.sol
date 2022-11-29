@@ -28,6 +28,7 @@ contract HypERC20 is ERC20Upgradeable, TokenRouter {
         string memory _name,
         string memory _symbol
     ) external initializer {
+        // transfers ownership to `msg.sender`
         __HyperlaneConnectionClient_initialize(
             _mailbox,
             _interchainGasPaymaster,
@@ -39,10 +40,12 @@ contract HypERC20 is ERC20Upgradeable, TokenRouter {
         _mint(msg.sender, _totalSupply);
     }
 
+    // called in `TokenRouter.transferRemote` before `Mailbox.dispatch`
     function _transferFromSender(uint256 _amount) internal override {
         _burn(msg.sender, _amount);
     }
 
+    // called by `TokenRouter.handle`
     function _transferTo(address _recipient, uint256 _amount)
         internal
         override

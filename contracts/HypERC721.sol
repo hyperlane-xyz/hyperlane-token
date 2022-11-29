@@ -27,6 +27,7 @@ contract HypERC721 is ERC721EnumerableUpgradeable, TokenRouter {
         string memory _name,
         string memory _symbol
     ) external initializer {
+        // transfers ownership to `msg.sender`
         __HyperlaneConnectionClient_initialize(
             _mailbox,
             _interchainGasPaymaster,
@@ -39,11 +40,13 @@ contract HypERC721 is ERC721EnumerableUpgradeable, TokenRouter {
         }
     }
 
+    // called in `TokenRouter.transferRemote` before `Mailbox.dispatch`
     function _transferFromSender(uint256 _tokenId) internal override {
         require(ownerOf(_tokenId) == msg.sender, "!owner");
         _burn(_tokenId);
     }
 
+    // called by `TokenRouter.handle`
     function _transferTo(address _recipient, uint256 _tokenId)
         internal
         override
