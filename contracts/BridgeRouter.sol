@@ -38,7 +38,6 @@ contract TokenBridge is Router {
         );
     }
 
-
     function collateralize(
         address erc20
     ) public returns (HypERC20Collateral) {
@@ -63,11 +62,23 @@ contract TokenBridge is Router {
         return HypERC20Collateral(collateral);
     }
 
-    function syntheticSalt(
+    function _syntheticSalt(
         uint32 canonical,
         address collateral
-    ) public pure returns (bytes32) {
+    ) internal pure returns (bytes32) {
         return keccak256(abi.encodePacked(collateral, canonical));
+    }
+
+    function _synthetic(
+        uint32 canonical,
+        address collateral,
+        uint32 destination
+    ) internal view returns (address) {
+        return Create2Upgradeable.computeAddress({
+            salt: _syntheticSalt(canonical, collateral),
+            bytecodeHash: keccak256(type(HypERC20).creationCode),
+            deployer: routers[destination].bytes32ToAddress()
+        });
     }
 
     function bridge(
@@ -93,27 +104,19 @@ contract TokenBridge is Router {
         // dispatch synthetic deployment
         _dispatchWithGas(destination, message, msg.value);
 
-        // update router with synthetic deployment
-        bytes32 salt = syntheticSalt({
-            canonical: mailbox.localDomain(),
-            collateral: address(collateral)
-        });
-        address synthetic = Create2Upgradeable.computeAddress({
-            salt: salt,
-            bytecodeHash: keccak256(type(HypERC20).creationCode),
-            deployer: routers[destination].bytes32ToAddress()
-        });
+        // *optimistically* update router with synthetic deployment
+        address synthetic = _synthetic(mailbox.localDomain(), address(collateral), destination);
         collateral.enrollRemoteRouter(destination, synthetic.addressToBytes32());
     }
 
     function synthesize(
         uint32 origin,
-        bytes32 collateral,
+        bytes32 collateral, // HypERC20Collateral on origin chain
         string memory name,
         string memory symbol
-    ) internal returns (HypERC20) {
+    ) internal {
         address collateralAddress = collateral.bytes32ToAddress();
-        bytes32 salt = syntheticSalt({
+        bytes32 salt = _syntheticSalt({
             canonical: origin,
             collateral: collateralAddress
         });
@@ -128,8 +131,6 @@ contract TokenBridge is Router {
         );
         synthetic.enrollRemoteRouter(origin, collateral);
         emit SyntheticCreated(origin, collateralAddress, address(synthetic));
-        
-        return HypERC20(synthetic);
     }
 
     function _handle(
