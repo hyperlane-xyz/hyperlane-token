@@ -2,6 +2,8 @@
 pragma solidity ^0.8.13;
 
 import {IERC20Metadata} from "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
+import {Create2Upgradeable} from "@openzeppelin/contracts-upgradeable/utils/Create2Upgradeable.sol";
+import {Address} from "@openzeppelin/contracts/utils/Address.sol";
 
 import {Router} from "@hyperlane-xyz/core/contracts/Router.sol";
 import {TypeCasts} from "@hyperlane-xyz/core/contracts/libs/TypeCasts.sol";
@@ -10,6 +12,18 @@ import {HypERC20Collateral} from "./HypERC20Collateral.sol";
 
 contract TokenBridge is Router {
     using TypeCasts for address;
+    using TypeCasts for bytes32;
+
+    event CollateralCreated(
+        address indexed canonical,
+        address collateral
+    );
+
+    event SyntheticCreated(
+        uint32 indexed canonical,
+        address indexed collateral,
+        address synthetic
+    );
 
     function initialize(
         address _mailbox,
@@ -24,46 +38,72 @@ contract TokenBridge is Router {
         );
     }
 
+
     function collateralize(
         address erc20
     ) public returns (HypERC20Collateral) {
-        // TODO: CREATE2
-        HypERC20Collateral collateral = new HypERC20Collateral(erc20);
-        collateral.initialize(
-            address(mailbox),
-            address(interchainGasPaymaster),
-            address(interchainSecurityModule)
+        bytes32 salt = erc20.addressToBytes32();
+        bytes memory bytecode = abi.encodePacked(
+            type(HypERC20Collateral).creationCode,
+            abi.encode(erc20)
         );
-        return collateral;
+        bytes32 bytecodeHash = keccak256(bytecode);
+        address collateral = Create2Upgradeable.computeAddress(salt, bytecodeHash);
+
+        if (!Address.isContract(collateral)) {
+            collateral = Create2Upgradeable.deploy(0, salt, bytecode);
+            HypERC20Collateral(collateral).initialize(
+                address(mailbox),
+                address(interchainGasPaymaster),
+                address(interchainSecurityModule)
+            );
+            emit CollateralCreated(erc20, collateral);
+        }
+
+        return HypERC20Collateral(collateral);
+    }
+
+    function syntheticSalt(
+        uint32 canonical,
+        address collateral
+    ) public pure returns (bytes32) {
+        return keccak256(abi.encodePacked(collateral, canonical));
     }
 
     function bridge(
         address erc20,
-        uint32[] calldata destinations
-    ) external {
-        // 1. deploy collateral contract
+        uint32 destination
+    ) external payable {
+        _mustHaveRemoteRouter(destination);
+
         HypERC20Collateral collateral = collateralize(erc20);
+
+        bytes32 router = collateral.routers(destination);
+        require(router == bytes32(0), "destination not new");
         
+        // fetch token metadata
         string memory name = IERC20Metadata(erc20).name();
         string memory symbol = IERC20Metadata(erc20).symbol();
         bytes memory message = abi.encode(
-            collateral,
+            address(collateral),
             name,
             symbol
         );
 
-        // 2. dispatch deployments on destination chains
-        for (uint256 i = 0; i < destinations.length; i++) {
-            uint32 destination = destinations[i];
+        // dispatch synthetic deployment
+        _dispatchWithGas(destination, message, msg.value);
 
-            // if synth doesn't already exist for destination, create it
-            bytes32 router = collateral.routers(destination);
-            if (router != bytes32(0)) {
-                _dispatch(destination, message);
-                // TODO: compute router address and enroll
-                // _enrollRemoteRouter(destination, )
-            }
-        }
+        // update router with synthetic deployment
+        bytes32 salt = syntheticSalt({
+            canonical: mailbox.localDomain(),
+            collateral: address(collateral)
+        });
+        address synthetic = Create2Upgradeable.computeAddress({
+            salt: salt,
+            bytecodeHash: keccak256(type(HypERC20).creationCode),
+            deployer: routers[destination].bytes32ToAddress()
+        });
+        collateral.enrollRemoteRouter(destination, synthetic.addressToBytes32());
     }
 
     function synthesize(
@@ -72,9 +112,13 @@ contract TokenBridge is Router {
         string memory name,
         string memory symbol
     ) internal returns (HypERC20) {
-        // TODO: CREATE2 
-        HypERC20 synth = new HypERC20();
-        synth.initialize(
+        address collateralAddress = collateral.bytes32ToAddress();
+        bytes32 salt = syntheticSalt({
+            canonical: origin,
+            collateral: collateralAddress
+        });
+        HypERC20 synthetic = new HypERC20{salt: salt}();
+        synthetic.initialize(
             address(mailbox),
             address(interchainGasPaymaster),
             address(interchainSecurityModule),
@@ -82,8 +126,10 @@ contract TokenBridge is Router {
             name,
             symbol
         );
-        synth.enrollRemoteRouter(origin, collateral);
-        return synth;
+        synthetic.enrollRemoteRouter(origin, collateral);
+        emit SyntheticCreated(origin, collateralAddress, address(synthetic));
+        
+        return HypERC20(synthetic);
     }
 
     function _handle(
@@ -95,6 +141,6 @@ contract TokenBridge is Router {
             _message,
             (bytes32, string, string)
         );
-        HypERC20 synth = synthesize(_origin, collateral, name, symbol);
+        synthesize(_origin, collateral, name, symbol);
     }
 }
