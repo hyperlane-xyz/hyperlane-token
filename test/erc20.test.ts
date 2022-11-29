@@ -38,7 +38,7 @@ const amount = 10;
 const testInterchainGasPayment = 123456789;
 
 const tokenConfig: SyntheticConfig = {
-  type: "SYNTHETIC",
+  type: 'SYNTHETIC',
   name: 'HypERC20',
   symbol: 'HYP',
   totalSupply,
@@ -80,7 +80,7 @@ for (const withCollateral of [true, false]) {
         );
         configWithTokenInfo.test1 = {
           ...configWithTokenInfo.test1,
-          type: "COLLATERAL",
+          type: 'COLLATERAL',
           token: erc20.address,
         };
       }

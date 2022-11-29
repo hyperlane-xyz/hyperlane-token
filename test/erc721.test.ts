@@ -41,7 +41,7 @@ const tokenId4 = 40;
 const testInterchainGasPayment = 123456789;
 
 const tokenConfig: TokenConfig = {
-  type: "SYNTHETIC",
+  type: 'SYNTHETIC',
   name: 'HypERC721',
   symbol: 'HYP',
   totalSupply,
@@ -98,7 +98,7 @@ for (const withCollateral of [true, false]) {
         );
         configWithTokenInfo.test1 = {
           ...configWithTokenInfo.test1,
-          type: "COLLATERAL",
+          type: 'COLLATERAL',
           token: erc721.address,
         };
       }
