@@ -17,7 +17,7 @@ import { utils } from '@hyperlane-xyz/utils';
 import {
   HypERC721CollateralConfig,
   HypERC721Config,
-  TokenConfig,
+  SyntheticConfig,
 } from '../src/config';
 import { HypERC721Contracts } from '../src/contracts';
 import { HypERC721Deployer } from '../src/deploy';
@@ -40,7 +40,8 @@ const tokenId3 = 30;
 const tokenId4 = 40;
 const testInterchainGasPayment = 123456789;
 
-const tokenConfig: TokenConfig = {
+const tokenConfig: SyntheticConfig = {
+  type: 'SYNTHETIC',
   name: 'HypERC721',
   symbol: 'HYP',
   totalSupply,
@@ -97,6 +98,7 @@ for (const withCollateral of [true, false]) {
         );
         configWithTokenInfo.test1 = {
           ...configWithTokenInfo.test1,
+          type: 'COLLATERAL',
           token: erc721.address,
         };
       }

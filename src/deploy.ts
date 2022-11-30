@@ -24,7 +24,7 @@ export class HypERC20Deployer<
   Chain,
   HypERC20Config | HypERC20CollateralConfig,
   HypERC20Contracts,
-  any
+  any // RouterFactories doesn't work well when router has multiple types
 > {
   async deployContracts(
     chain: Chain,
