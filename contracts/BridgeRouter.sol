@@ -14,10 +14,7 @@ contract TokenBridge is Router {
     using TypeCasts for address;
     using TypeCasts for bytes32;
 
-    event CollateralCreated(
-        address indexed canonical,
-        address collateral
-    );
+    event CollateralCreated(address indexed canonical, address collateral);
 
     event SyntheticCreated(
         uint32 indexed canonical,
@@ -38,16 +35,17 @@ contract TokenBridge is Router {
         );
     }
 
-    function collateralize(
-        address erc20
-    ) public returns (HypERC20Collateral) {
+    function collateralize(address erc20) public returns (HypERC20Collateral) {
         bytes32 salt = erc20.addressToBytes32();
         bytes memory bytecode = abi.encodePacked(
             type(HypERC20Collateral).creationCode,
             abi.encode(erc20)
         );
         bytes32 bytecodeHash = keccak256(bytecode);
-        address collateral = Create2Upgradeable.computeAddress(salt, bytecodeHash);
+        address collateral = Create2Upgradeable.computeAddress(
+            salt,
+            bytecodeHash
+        );
 
         if (!Address.isContract(collateral)) {
             collateral = Create2Upgradeable.deploy(0, salt, bytecode);
@@ -62,10 +60,11 @@ contract TokenBridge is Router {
         return HypERC20Collateral(collateral);
     }
 
-    function _syntheticSalt(
-        uint32 canonical,
-        address collateral
-    ) internal pure returns (bytes32) {
+    function _syntheticSalt(uint32 canonical, address collateral)
+        internal
+        pure
+        returns (bytes32)
+    {
         return keccak256(abi.encodePacked(collateral, canonical));
     }
 
@@ -74,39 +73,40 @@ contract TokenBridge is Router {
         address collateral,
         uint32 destination
     ) internal view returns (address) {
-        return Create2Upgradeable.computeAddress({
-            salt: _syntheticSalt(canonical, collateral),
-            bytecodeHash: keccak256(type(HypERC20).creationCode),
-            deployer: routers[destination].bytes32ToAddress()
-        });
+        return
+            Create2Upgradeable.computeAddress({
+                salt: _syntheticSalt(canonical, collateral),
+                bytecodeHash: keccak256(type(HypERC20).creationCode),
+                deployer: routers[destination].bytes32ToAddress()
+            });
     }
 
-    function bridge(
-        address erc20,
-        uint32 destination
-    ) external payable {
+    function bridge(address erc20, uint32 destination) external payable {
         _mustHaveRemoteRouter(destination);
 
         HypERC20Collateral collateral = collateralize(erc20);
 
         bytes32 router = collateral.routers(destination);
         require(router == bytes32(0), "destination not new");
-        
+
         // fetch token metadata
         string memory name = IERC20Metadata(erc20).name();
         string memory symbol = IERC20Metadata(erc20).symbol();
-        bytes memory message = abi.encode(
-            address(collateral),
-            name,
-            symbol
-        );
+        bytes memory message = abi.encode(address(collateral), name, symbol);
 
         // dispatch synthetic deployment
         _dispatchWithGas(destination, message, msg.value);
 
         // *optimistically* update router with synthetic deployment
-        address synthetic = _synthetic(mailbox.localDomain(), address(collateral), destination);
-        collateral.enrollRemoteRouter(destination, synthetic.addressToBytes32());
+        address synthetic = _synthetic(
+            mailbox.localDomain(),
+            address(collateral),
+            destination
+        );
+        collateral.enrollRemoteRouter(
+            destination,
+            synthetic.addressToBytes32()
+        );
     }
 
     function synthesize(
@@ -138,10 +138,8 @@ contract TokenBridge is Router {
         bytes32,
         bytes calldata _message
     ) internal override {
-        (bytes32 collateral, string memory name, string memory symbol) = abi.decode(
-            _message,
-            (bytes32, string, string)
-        );
+        (bytes32 collateral, string memory name, string memory symbol) = abi
+            .decode(_message, (bytes32, string, string));
         synthesize(_origin, collateral, name, symbol);
     }
 }
