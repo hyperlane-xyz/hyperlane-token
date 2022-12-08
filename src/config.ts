@@ -2,14 +2,15 @@ import { ethers } from 'ethers';
 
 import { RouterConfig } from '@hyperlane-xyz/sdk';
 
+
 export type SyntheticConfig = {
-  type: "SYNTHETIC";
+  type: "SYNTHETIC"
   name: string;
   symbol: string;
   totalSupply: ethers.BigNumberish;
 };
 export type CollateralConfig = {
-  type: "COLLATERAL";
+  type: "COLLATERAL",
   token: string;
 }
 

@@ -1,5 +1,3 @@
-import { ethers } from 'ethers';
-
 import {
   ChainName,
   HyperlaneRouterDeployer,
@@ -30,7 +28,6 @@ export class HypERC20Deployer<
     chain: Chain,
     config: HypERC20Config | HypERC20CollateralConfig,
   ) {
-    const ism = config.interchainSecurityModule ?? ethers.constants.AddressZero;
     const connection = this.multiProvider.getChainConnection(chain);
     if (isCollateralConfig(config)) {
       const router = await this.deployContractFromFactory(
@@ -41,9 +38,8 @@ export class HypERC20Deployer<
       );
       await connection.handleTx(
         router.initialize(
-          config.mailbox,
-          config.interchainGasPaymaster,
-          ism
+          config.connectionManager,
+          config.interchainGasPaymaster
         ),
       );
       return { router };
@@ -55,9 +51,8 @@ export class HypERC20Deployer<
         [],
       );
       await connection.handleTx(router.initialize(
-        config.mailbox,
+        config.connectionManager,
         config.interchainGasPaymaster,
-        ism,
         config.totalSupply,
         config.name,
         config.symbol,
@@ -80,38 +75,38 @@ export class HypERC721Deployer<
     chain: Chain,
     config: HypERC721Config | HypERC721CollateralConfig,
   ) {
-    const ism = config.interchainSecurityModule ?? ethers.constants.AddressZero;
-    const connection = this.multiProvider.getChainConnection(chain);
+    // const connection = this.multiProvider.getChainConnection(chain);
     if (isCollateralConfig(config)) {
       const router = await this.deployContractFromFactory(
         chain,
         new HypERC721Collateral__factory(),
-        'HypERC721Collateral',
+        'router',
         [config.token],
       );
-      await connection.handleTx(
-        router.initialize(
-          config.mailbox,
-          config.interchainGasPaymaster,
-          ism
-        ),
-      );
+      this.logger(`Deployed HypERC721Collateral`)
+      
+      // await connection.handleTx(
+      //   router.initialize(
+      //     config.connectionManager,
+      //     config.interchainGasPaymaster
+      //   ),
+      // );
       return { router };
     } else {
       const router = await this.deployContractFromFactory(
         chain,
         new HypERC721__factory(),
-        'HypERC721',
+        'router',
         [],
       );
-      await connection.handleTx(router.initialize(
-        config.mailbox,
-        config.interchainGasPaymaster,
-        ism,
-        config.totalSupply,
-        config.name,
-        config.symbol,
-      ));
+      this.logger(`Deployed HypERC721`)
+      // await connection.handleTx(router.initialize(
+      //   config.connectionManager,
+      //   config.interchainGasPaymaster,
+      //   config.totalSupply,
+      //   config.name,
+      //   config.symbol,
+      // ));
       return { router };
     }
   }
