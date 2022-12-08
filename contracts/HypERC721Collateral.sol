@@ -10,10 +10,10 @@ import {IERC721} from "@openzeppelin/contracts/token/ERC721/IERC721.sol";
  * @author Abacus Works
  */
 contract HypERC721Collateral is TokenRouter {
-    IERC721 public immutable wrappedToken;
+    address public immutable wrappedToken;
 
     constructor(address erc721) {
-        wrappedToken = IERC721(erc721);
+        wrappedToken = erc721;
     }
 
     function initialize(
@@ -28,8 +28,8 @@ contract HypERC721Collateral is TokenRouter {
         );
     }
 
-    function _transferFromSender(uint256 _amount) internal override returns (bytes memory) {
-        wrappedToken.transferFrom(msg.sender, address(this), _amount);
+    function _transferFromSender(uint256 _amount) internal virtual override returns (bytes memory) {
+        IERC721(wrappedToken).transferFrom(msg.sender, address(this), _amount);
         return bytes(""); // no metadata
     }
 
@@ -37,6 +37,6 @@ contract HypERC721Collateral is TokenRouter {
         internal
         override
     {
-        wrappedToken.transferFrom(address(this), _recipient, _amount);
+        IERC721(wrappedToken).transferFrom(address(this), _recipient, _amount);
     }
 }

@@ -53,7 +53,7 @@ contract HypERC721URIStorage is HypERC721, ERC721URIStorageUpgradeable {
         return ERC721EnumerableUpgradeable.supportsInterface(interfaceId);
     }
 
-    function _burn(uint256 tokenId) internal override(ERC721Upgradeable, ERC721URIStorageUpgradeable) {
+    function _burn(uint256 tokenId) internal override(ERC721URIStorageUpgradeable, ERC721Upgradeable) {
         ERC721URIStorageUpgradeable._burn(tokenId);
     }
 }
