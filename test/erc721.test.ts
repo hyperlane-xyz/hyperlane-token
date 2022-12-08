@@ -27,6 +27,8 @@ import {
   ERC721__factory,
   HypERC721,
   HypERC721Collateral,
+  HypERC721URICollateral,
+  HypERC721URIStorage,
 } from '../src/types';
 
 const localChain = 'test1';
@@ -40,37 +42,37 @@ const tokenId3 = 30;
 const tokenId4 = 40;
 const testInterchainGasPayment = 123456789;
 
-const tokenConfig: SyntheticConfig = {
-  type: 'SYNTHETIC',
-  name: 'HypERC721',
-  symbol: 'HYP',
-  totalSupply,
-};
-
-const configMap = {
-  test1: {
-    ...tokenConfig,
-    totalSupply,
-  },
-  test2: {
-    ...tokenConfig,
-    totalSupply: 0,
-  },
-  test3: {
-    ...tokenConfig,
-    totalSupply: 0,
-  },
-};
-
 for (const withCollateral of [true, false]) {
-  describe(`HypERC721${withCollateral ? 'Collateral' : ''}`, async () => {
+  for (const withUri of [true, false]) {
+  const tokenConfig: SyntheticConfig = {
+    type: `SYNTHETIC${withUri ? '_URI' : ''}`,
+    name: 'HypERC721',
+    symbol: 'HYP',
+    totalSupply,
+  };
+  
+  const configMap = {
+    test1: {
+      ...tokenConfig,
+      totalSupply,
+    },
+    test2: {
+      ...tokenConfig,
+      totalSupply: 0,
+    },
+    test3: {
+      ...tokenConfig,
+      totalSupply: 0,
+    },
+  };
+  describe(`HypERC721${withUri ? 'URI' : ''}${withCollateral ? 'Collateral' : ''}`, async () => {
     let owner: SignerWithAddress;
     let recipient: SignerWithAddress;
     let core: TestCoreApp;
     let deployer: HypERC721Deployer<TestChainNames>;
     let contracts: Record<TestChainNames, HypERC721Contracts>;
-    let local: HypERC721 | HypERC721Collateral;
-    let remote: HypERC721 | HypERC721Collateral;
+    let local: HypERC721 | HypERC721Collateral | HypERC721URICollateral;
+    let remote: HypERC721 | HypERC721Collateral | HypERC721URIStorage;
 
     beforeEach(async () => {
       [owner, recipient] = await ethers.getSigners();
@@ -98,7 +100,7 @@ for (const withCollateral of [true, false]) {
         );
         configWithTokenInfo.test1 = {
           ...configWithTokenInfo.test1,
-          type: 'COLLATERAL',
+          type: `COLLATERAL${withUri ? '_URI' : ''}`,
           token: erc721.address,
         };
       }
@@ -148,22 +150,20 @@ for (const withCollateral of [true, false]) {
       await expectBalance(remote, owner, 0);
     });
 
-    it('should allow for local transfers', async () => {
-      // do not test underlying ERC721 collateral functionality
-      if (withCollateral) {
-        return;
-      }
-
-      await (local as HypERC721).transferFrom(
-        owner.address,
-        recipient.address,
-        tokenId,
-      );
-      await expectBalance(local, recipient, 1);
-      await expectBalance(local, owner, totalSupply - 1);
-      await expectBalance(remote, recipient, 0);
-      await expectBalance(remote, owner, 0);
-    });
+    // do not test underlying ERC721 collateral functionality
+    if (!withCollateral) {
+      it('should allow for local transfers', async () => { 
+        await (local as HypERC721).transferFrom(
+          owner.address,
+          recipient.address,
+          tokenId,
+        );
+        await expectBalance(local, recipient, 1);
+        await expectBalance(local, owner, totalSupply - 1);
+        await expectBalance(remote, recipient, 0);
+        await expectBalance(remote, owner, 0);
+      });
+    }
 
     it('should not allow transfers of nonexistent identifiers', async () => {
       const invalidTokenId = totalSupply + 10;
@@ -204,6 +204,25 @@ for (const withCollateral of [true, false]) {
       await expectBalance(remote, recipient, 1);
       await expectBalance(remote, owner, 0);
     });
+
+    if (withUri && withCollateral) {
+      it('should relay URI with remote transfer', async () => {
+        const remoteUri = (remote as HypERC721URIStorage);
+        await expect(remoteUri.tokenURI(tokenId2)).to.be.revertedWith('');
+
+        await local.transferRemote(
+          remoteDomain,
+          utils.addressToBytes32(recipient.address),
+          tokenId2,
+        );
+  
+        await expect(remoteUri.tokenURI(tokenId2)).to.be.revertedWith('');
+  
+        await core.processMessages();
+
+        expect(await remoteUri.tokenURI(tokenId2)).to.equal(`TEST-BASE-URI${tokenId2}`)
+      });
+    }
 
     it('should prevent remote transfer of unowned id', async () => {
       const revertReason = withCollateral
@@ -250,6 +269,7 @@ for (const withCollateral of [true, false]) {
         .withArgs(localDomain, recipient.address, tokenId4);
     });
   });
+}
 }
 
 const expectBalance = async (

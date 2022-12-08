@@ -122,19 +122,18 @@ for (const withCollateral of [true, false]) {
       await expectBalance(remote, recipient, 0);
       await expectBalance(remote, owner, totalSupply);
     });
+    
+    // do not test underlying ERC20 collateral functionality
+    if (!withCollateral) {
+      it('should allow for local transfers', async () => {
 
-    it('should allow for local transfers', async () => {
-      // do not test underlying ERC20 collateral functionality
-      if (withCollateral) {
-        return;
-      }
-
-      await (local as HypERC20).transfer(recipient.address, amount);
-      await expectBalance(local, recipient, amount);
-      await expectBalance(local, owner, totalSupply - amount);
-      await expectBalance(remote, recipient, 0);
-      await expectBalance(remote, owner, totalSupply);
-    });
+        await (local as HypERC20).transfer(recipient.address, amount);
+        await expectBalance(local, recipient, amount);
+        await expectBalance(local, owner, totalSupply - amount);
+        await expectBalance(remote, recipient, 0);
+        await expectBalance(remote, owner, totalSupply);
+      });
+    }
 
     it('should allow for remote transfers', async () => {
       await local.transferRemote(
