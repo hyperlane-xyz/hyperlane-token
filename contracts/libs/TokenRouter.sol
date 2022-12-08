@@ -52,16 +52,16 @@ abstract contract TokenRouter is Router {
         bytes32 _recipient,
         uint256 _amount
     ) external payable {
-        _transferFromSender(_amount);
+        bytes memory metadata = _transferFromSender(_amount);
         _dispatchWithGas(
             _destination,
-            Message.format(_recipient, _amount),
+            Message.format(_recipient, _amount, metadata),
             msg.value
         );
         emit SentTransferRemote(_destination, _recipient, _amount);
     }
 
-    function _transferFromSender(uint256 _amount) internal virtual;
+    function _transferFromSender(uint256 _amount) internal virtual returns (bytes memory metadata);
 
     /**
      * @dev Mints tokens to recipient when router receives transfer message.
@@ -76,9 +76,10 @@ abstract contract TokenRouter is Router {
     ) internal override {
         bytes32 recipient = _message.recipient();
         uint256 amount = _message.amount();
-        _transferTo(recipient.bytes32ToAddress(), amount);
+        bytes calldata metadata = _message.metadata();
+        _transferTo(recipient.bytes32ToAddress(), amount, metadata);
         emit ReceivedTransferRemote(_origin, recipient, amount);
     }
 
-    function _transferTo(address _recipient, uint256 _amount) internal virtual;
+    function _transferTo(address _recipient, uint256 _amount, bytes calldata metadata) internal virtual;
 }

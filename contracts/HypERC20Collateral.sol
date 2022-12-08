@@ -28,14 +28,15 @@ contract HypERC20Collateral is TokenRouter {
         );
     }
 
-    function _transferFromSender(uint256 _amount) internal override {
-        require(wrappedToken.transferFrom(msg.sender, address(this), _amount));
+    function _transferFromSender(uint256 _amount) internal override returns (bytes memory) {
+        require(wrappedToken.transferFrom(msg.sender, address(this), _amount), "!transferFrom");
+        return bytes(""); // no metadata
     }
 
-    function _transferTo(address _recipient, uint256 _amount)
+    function _transferTo(address _recipient, uint256 _amount, bytes calldata) // no metadata
         internal
         override
     {
-        require(wrappedToken.transfer(_recipient, _amount));
+        require(wrappedToken.transfer(_recipient, _amount), "!transfer");
     }
 }

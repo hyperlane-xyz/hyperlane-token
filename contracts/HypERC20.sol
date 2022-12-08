@@ -41,12 +41,13 @@ contract HypERC20 is ERC20Upgradeable, TokenRouter {
     }
 
     // called in `TokenRouter.transferRemote` before `Mailbox.dispatch`
-    function _transferFromSender(uint256 _amount) internal override {
+    function _transferFromSender(uint256 _amount) internal override returns (bytes memory) {
         _burn(msg.sender, _amount);
+        return bytes(""); // no metadata
     }
 
     // called by `TokenRouter.handle`
-    function _transferTo(address _recipient, uint256 _amount)
+    function _transferTo(address _recipient, uint256 _amount, bytes calldata) // no metadata
         internal
         override
     {

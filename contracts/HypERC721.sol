@@ -41,14 +41,16 @@ contract HypERC721 is ERC721EnumerableUpgradeable, TokenRouter {
     }
 
     // called in `TokenRouter.transferRemote` before `Mailbox.dispatch`
-    function _transferFromSender(uint256 _tokenId) internal override {
+    function _transferFromSender(uint256 _tokenId) internal virtual override returns (bytes memory) {
         require(ownerOf(_tokenId) == msg.sender, "!owner");
         _burn(_tokenId);
+        return bytes(""); // no metadata
     }
 
     // called by `TokenRouter.handle`
-    function _transferTo(address _recipient, uint256 _tokenId)
+    function _transferTo(address _recipient, uint256 _tokenId, bytes calldata) // no metadata
         internal
+        virtual
         override
     {
         _mint(_recipient, _tokenId);
