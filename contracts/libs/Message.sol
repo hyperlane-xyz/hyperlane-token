@@ -2,11 +2,11 @@
 pragma solidity >=0.8.0;
 
 library Message {
-    function format(bytes32 _recipient, uint256 _amount, bytes memory _metadata)
-        internal
-        pure
-        returns (bytes memory)
-    {
+    function format(
+        bytes32 _recipient,
+        uint256 _amount,
+        bytes memory _metadata
+    ) internal pure returns (bytes memory) {
         return abi.encodePacked(_recipient, _amount, _metadata);
     }
 
@@ -23,7 +23,11 @@ library Message {
         return amount(message);
     }
 
-    function metadata(bytes calldata message) internal pure returns (bytes calldata) {
+    function metadata(bytes calldata message)
+        internal
+        pure
+        returns (bytes calldata)
+    {
         return message[64:];
     }
 }

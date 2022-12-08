@@ -61,7 +61,10 @@ abstract contract TokenRouter is Router {
         emit SentTransferRemote(_destination, _recipient, _amount);
     }
 
-    function _transferFromSender(uint256 _amount) internal virtual returns (bytes memory metadata);
+    function _transferFromSender(uint256 _amount)
+        internal
+        virtual
+        returns (bytes memory metadata);
 
     /**
      * @dev Mints tokens to recipient when router receives transfer message.
@@ -81,5 +84,9 @@ abstract contract TokenRouter is Router {
         emit ReceivedTransferRemote(_origin, recipient, amount);
     }
 
-    function _transferTo(address _recipient, uint256 _amount, bytes calldata metadata) internal virtual;
+    function _transferTo(
+        address _recipient,
+        uint256 _amount,
+        bytes calldata metadata
+    ) internal virtual;
 }

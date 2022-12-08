@@ -122,11 +122,10 @@ for (const withCollateral of [true, false]) {
       await expectBalance(remote, recipient, 0);
       await expectBalance(remote, owner, totalSupply);
     });
-    
+
     // do not test underlying ERC20 collateral functionality
     if (!withCollateral) {
       it('should allow for local transfers', async () => {
-
         await (local as HypERC20).transfer(recipient.address, amount);
         await expectBalance(local, recipient, amount);
         await expectBalance(local, owner, totalSupply - amount);

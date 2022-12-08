@@ -28,15 +28,21 @@ contract HypERC721Collateral is TokenRouter {
         );
     }
 
-    function _transferFromSender(uint256 _amount) internal virtual override returns (bytes memory) {
+    function _transferFromSender(uint256 _amount)
+        internal
+        virtual
+        override
+        returns (bytes memory)
+    {
         IERC721(wrappedToken).transferFrom(msg.sender, address(this), _amount);
         return bytes(""); // no metadata
     }
 
-    function _transferTo(address _recipient, uint256 _amount, bytes calldata) // no metadata
-        internal
-        override
-    {
+    function _transferTo(
+        address _recipient,
+        uint256 _amount,
+        bytes calldata // no metadata
+    ) internal override {
         IERC721(wrappedToken).transferFrom(address(this), _recipient, _amount);
     }
 }

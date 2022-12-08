@@ -12,8 +12,13 @@ import {IERC721MetadataUpgradeable} from "@openzeppelin/contracts-upgradeable/to
 contract HypERC721URICollateral is HypERC721Collateral {
     constructor(address erc721) HypERC721Collateral(erc721) {}
 
-    function _transferFromSender(uint256 _tokenId) internal override returns (bytes memory) {
+    function _transferFromSender(uint256 _tokenId)
+        internal
+        override
+        returns (bytes memory)
+    {
         HypERC721Collateral._transferFromSender(_tokenId);
-        return bytes(IERC721MetadataUpgradeable(wrappedToken).tokenURI(_tokenId));
+        return
+            bytes(IERC721MetadataUpgradeable(wrappedToken).tokenURI(_tokenId));
     }
 }
