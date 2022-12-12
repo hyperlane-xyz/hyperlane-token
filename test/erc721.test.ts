@@ -41,7 +41,6 @@ const tokenId = 10;
 const tokenId2 = 20;
 const tokenId3 = 30;
 const tokenId4 = 40;
-const testInterchainGasPayment = 123456789;
 
 for (const withCollateral of [true, false]) {
   for (const withUri of [true, false]) {
@@ -242,21 +241,6 @@ for (const withCollateral of [true, false]) {
               tokenId2,
             ),
         ).to.be.revertedWith(revertReason);
-      });
-
-      it('allows interchain gas payment for remote transfers', async () => {
-        const interchainGasPaymaster =
-          core.contractsMap[localChain].interchainGasPaymaster.contract;
-        await expect(
-          local.transferRemote(
-            remoteDomain,
-            utils.addressToBytes32(recipient.address),
-            tokenId3,
-            {
-              value: testInterchainGasPayment,
-            },
-          ),
-        ).to.emit(interchainGasPaymaster, 'GasPayment');
       });
 
       it('should emit TransferRemote events', async () => {
