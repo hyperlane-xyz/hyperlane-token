@@ -22,7 +22,6 @@ async function deployNFTWrapper() {
     'pkey',
   );
 
-  console.log(prodConfigs);
   console.info('Preparing utilities');
   const chainProviders = objMap(prodConfigs, (_, config) => ({
     provider: config.provider,
