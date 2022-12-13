@@ -36,6 +36,7 @@ const localDomain = ChainNameToDomainId[localChain];
 const remoteDomain = ChainNameToDomainId[remoteChain];
 const totalSupply = 3000;
 const amount = 10;
+const testInterchainGasPayment = 123456789;
 
 const tokenConfig: SyntheticConfig = {
   type: TokenType.synthetic,
@@ -152,6 +153,21 @@ for (const withCollateral of [true, false]) {
       await expectBalance(local, owner, totalSupply - amount);
       await expectBalance(remote, recipient, amount);
       await expectBalance(remote, owner, totalSupply);
+    });
+
+    it.skip('allows interchain gas payment for remote transfers', async () => {
+      const interchainGasPaymaster =
+        core.contractsMap[localChain].interchainGasPaymaster.contract;
+      await expect(
+        local.transferRemote(
+          remoteDomain,
+          utils.addressToBytes32(recipient.address),
+          amount,
+          {
+            value: testInterchainGasPayment,
+          },
+        ),
+      ).to.emit(interchainGasPaymaster, 'GasPayment');
     });
 
     it('should prevent remote transfer of unowned balance', async () => {

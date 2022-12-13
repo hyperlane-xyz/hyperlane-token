@@ -11,7 +11,7 @@ import { RouterConfig, chainConnectionConfigs } from '@hyperlane-xyz/sdk';
 import { CollateralConfig, SyntheticConfig } from '../src/config';
 import { HypERC721Deployer } from '../src/deploy';
 
-const prodConfigs = {
+const connectionConfigs = {
   celo: chainConnectionConfigs.celo,
   ethereum: chainConnectionConfigs.ethereum,
 };
@@ -22,19 +22,8 @@ async function deployNFTWrapper() {
     'pkey',
   );
 
-  console.info('Preparing utilities');
-  const chainProviders = objMap(prodConfigs, (_, config) => ({
-    provider: config.provider,
-    confirmations: config.confirmations,
-    overrides: config.overrides,
-    signer: new Wallet(
-      'pkey',
-      config.provider,
-    ),
-  }));
-
-  const multiProvider = new MultiProvider(chainProviders);
-
+  const multiProvider = new MultiProvider(connectionConfigs);
+  multiProvider.rotateSigner(signer)
   const core = HyperlaneCore.fromEnvironment('mainnet', multiProvider);
   const config = {
     celo: {
