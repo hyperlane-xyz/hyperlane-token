@@ -18,6 +18,7 @@ import {
   HypERC721CollateralConfig,
   HypERC721Config,
   SyntheticConfig,
+  TokenType,
 } from '../src/config';
 import { HypERC721Contracts } from '../src/contracts';
 import { HypERC721Deployer } from '../src/deploy';
@@ -45,7 +46,7 @@ const testInterchainGasPayment = 123456789;
 for (const withCollateral of [true, false]) {
   for (const withUri of [true, false]) {
     const tokenConfig: SyntheticConfig = {
-      type: `SYNTHETIC${withUri ? '_URI' : ''}`,
+      type: withUri ? TokenType.syntheticUri : TokenType.synthetic,
       name: 'HypERC721',
       symbol: 'HYP',
       totalSupply,
@@ -102,7 +103,7 @@ for (const withCollateral of [true, false]) {
           );
           configWithTokenInfo.test1 = {
             ...configWithTokenInfo.test1,
-            type: `COLLATERAL${withUri ? '_URI' : ''}`,
+            type: withUri ? TokenType.collateralUri : TokenType.collateral,
             token: erc721.address,
           };
         }
