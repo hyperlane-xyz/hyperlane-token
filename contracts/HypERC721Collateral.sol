@@ -20,7 +20,6 @@ contract HypERC721Collateral is TokenRouter {
      * @notice Initializes the Hyperlane router.
      * @param _mailbox The address of the mailbox contract.
      * @param _interchainGasPaymaster The address of the interchain gas paymaster contract.
-     * @param _interchainSecurityModule The address of the interchain security module contract.
      */
     function initialize(
         address _mailbox,

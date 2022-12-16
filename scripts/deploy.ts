@@ -8,7 +8,7 @@ import {
 } from '@hyperlane-xyz/sdk';
 import { RouterConfig, chainConnectionConfigs } from '@hyperlane-xyz/sdk';
 
-import { CollateralConfig, SyntheticConfig } from '../src/config';
+import { CollateralConfig, SyntheticConfig, TokenType } from '../src/config';
 import { HypERC721Deployer } from '../src/deploy';
 
 const connectionConfigs = {
@@ -27,7 +27,7 @@ async function deployNFTWrapper() {
   const core = HyperlaneCore.fromEnvironment('mainnet', multiProvider);
   const config = {
     celo: {
-      type: 'SYNTHETIC_URI',
+      type: TokenType.syntheticUri,
       name: 'Flow3rs 2022',
       symbol: 'FLOW3',
       totalSupply: 0,
@@ -37,7 +37,7 @@ async function deployNFTWrapper() {
         .interchainGasPaymaster.address,
     } as SyntheticConfig & RouterConfig,
     ethereum: {
-      type: 'COLLATERAL_URI',
+      type: TokenType.collateralUri,
       token: '0x0b23Be9f71d57B06F125cF88D5bF063b0e23ACEc',
       owner: signer.address,
       mailbox: '0x1d3aAC239538e6F1831C8708803e61A9EA299Eec',
