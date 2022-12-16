@@ -6,7 +6,7 @@ import {TokenRouter} from "./libs/TokenRouter.sol";
 import {ERC20Upgradeable} from "@openzeppelin/contracts-upgradeable/token/ERC20/ERC20Upgradeable.sol";
 
 /**
- * @title Hyperlane Token that extends the ERC20 token standard to enable native interchain transfers.
+ * @title Hyperlane ERC20 Token Router that extends ERC20 with remote transfer functionality.
  * @author Abacus Works
  * @dev Supply on each chain is not constant but the aggregate supply across all chains is.
  */
@@ -40,7 +40,10 @@ contract HypERC20 is ERC20Upgradeable, TokenRouter {
         _mint(msg.sender, _totalSupply);
     }
 
-    // called in `TokenRouter.transferRemote` before `Mailbox.dispatch`
+    /**
+     * @dev Burns `_amount` of token from `msg.sender` balance.
+     * @inheritdoc TokenRouter
+     */
     function _transferFromSender(uint256 _amount)
         internal
         override
@@ -50,7 +53,10 @@ contract HypERC20 is ERC20Upgradeable, TokenRouter {
         return bytes(""); // no metadata
     }
 
-    // called by `TokenRouter.handle`
+    /**
+     * @dev Mints `_amount` of token to `_recipient` balance.
+     * @inheritdoc TokenRouter
+     */
     function _transferTo(
         address _recipient,
         uint256 _amount,

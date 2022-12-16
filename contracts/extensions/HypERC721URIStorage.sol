@@ -8,11 +8,14 @@ import {ERC721EnumerableUpgradeable} from "@openzeppelin/contracts-upgradeable/t
 import {ERC721Upgradeable} from "@openzeppelin/contracts-upgradeable/token/ERC721/ERC721Upgradeable.sol";
 
 /**
- * @title Hyperlane Token that extends the ERC721 token standard to enable native interchain transfers.
+ * @title Hyperlane ERC721 Token that extends ERC721URIStorage with remote transfer and URI relay functionality.
  * @author Abacus Works
  */
 contract HypERC721URIStorage is HypERC721, ERC721URIStorageUpgradeable {
-    // called in `TokenRouter.transferRemote` before `Mailbox.dispatch`
+    /**
+     * @return _tokenURI The URI of `_tokenId`.
+     * @inheritdoc HypERC721
+     */
     function _transferFromSender(uint256 _tokenId)
         internal
         override
@@ -22,7 +25,10 @@ contract HypERC721URIStorage is HypERC721, ERC721URIStorageUpgradeable {
         HypERC721._transferFromSender(_tokenId);
     }
 
-    // called by `TokenRouter.handle`
+    /**
+     * @dev Sets the URI for `_tokenId` to `_tokenURI`.
+     * @inheritdoc HypERC721
+     */
     function _transferTo(
         address _recipient,
         uint256 _tokenId,
