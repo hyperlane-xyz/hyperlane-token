@@ -86,7 +86,7 @@ abstract contract TokenRouter is Router {
         _transferTo(recipient.bytes32ToAddress(), amount, metadata);
         emit ReceivedTransferRemote(_origin, recipient, amount);
     }
-    
+
     /**
      * @dev Should transfer `_amountOrId` of tokens from this token router to `_recipient`.
      * @dev Called by `handle` after message decoding.
