@@ -1,7 +1,7 @@
 {
   "name": "@hyperlane-xyz/hyperlane-token",
   "description": "A template for interchain ERC20 and ERC721 tokens using Hyperlane",
-  "version": "0.5.0",
+  "version": "1.0.0-beta1",
   "dependencies": {
     "@hyperlane-xyz/core": "1.0.0-beta1",
     "@hyperlane-xyz/sdk": "1.0.0-beta1",
