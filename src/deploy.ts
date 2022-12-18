@@ -1,5 +1,3 @@
-import { ethers } from 'ethers';
-
 import {
   ChainName,
   HyperlaneRouterDeployer,
@@ -31,7 +29,6 @@ export class HypERC20Deployer<
     chain: Chain,
     config: HypERC20Config | HypERC20CollateralConfig,
   ) {
-    const ism = config.interchainSecurityModule ?? ethers.constants.AddressZero;
     const connection = this.multiProvider.getChainConnection(chain);
     if (isCollateralConfig(config)) {
       const router = await this.deployContractFromFactory(
@@ -44,7 +41,6 @@ export class HypERC20Deployer<
         router.initialize(
           config.mailbox,
           config.interchainGasPaymaster,
-          ism
         ),
       );
       return { router };
@@ -58,7 +54,6 @@ export class HypERC20Deployer<
       await connection.handleTx(router.initialize(
         config.mailbox,
         config.interchainGasPaymaster,
-        ism,
         config.totalSupply,
         config.name,
         config.symbol,

@@ -24,13 +24,11 @@ contract HypERC20Collateral is TokenRouter {
      */
     function initialize(
         address _mailbox,
-        address _interchainGasPaymaster,
-        address _interchainSecurityModule
+        address _interchainGasPaymaster
     ) external initializer {
         __HyperlaneConnectionClient_initialize(
             _mailbox,
-            _interchainGasPaymaster,
-            _interchainSecurityModule
+            _interchainGasPaymaster
         );
     }
 
