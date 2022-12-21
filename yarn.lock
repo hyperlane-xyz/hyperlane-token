@@ -1221,7 +1221,7 @@ __metadata:
     "@hyperlane-xyz/utils": 1.0.0-beta1
     "@nomiclabs/hardhat-ethers": ^2.0.5
     "@nomiclabs/hardhat-waffle": ^2.0.2
-    "@openzeppelin/contracts-upgradeable": ^4.6.0
+    "@openzeppelin/contracts-upgradeable": ^4.8.0
     "@trivago/prettier-plugin-sort-imports": ^3.2.0
     "@typechain/ethers-v5": 10.0.0
     "@typechain/hardhat": ^6.0.0
@@ -1429,13 +1429,6 @@ __metadata:
     mkdirp: ^1.0.4
     rimraf: ^3.0.2
   checksum: 1388777b507b0c592d53f41b9d182e1a8de7763bc625fc07999b8edbc22325f074e5b3ec90af79c89d6987fdb2325bc66d59f483258543c14a43661621f841b0
-  languageName: node
-  linkType: hard
-
-"@openzeppelin/contracts-upgradeable@npm:^4.6.0":
-  version: 4.7.3
-  resolution: "@openzeppelin/contracts-upgradeable@npm:4.7.3"
-  checksum: c9ffb40cb847a975d440204fc6a811f43af960050242f707332b984d29bd16dc242ffa0935de61867aeb9e0357fadedb16b09b276deda5e9775582face831021
   languageName: node
   linkType: hard
 
