@@ -53,7 +53,12 @@ contract HypERC721URIStorage is HypERC721, ERC721URIStorageUpgradeable {
         uint256 tokenId,
         uint256 batchSize
     ) internal override(ERC721EnumerableUpgradeable, ERC721Upgradeable) {
-        ERC721EnumerableUpgradeable._beforeTokenTransfer(from, to, tokenId, batchSize);
+        ERC721EnumerableUpgradeable._beforeTokenTransfer(
+            from,
+            to,
+            tokenId,
+            batchSize
+        );
     }
 
     function supportsInterface(bytes4 interfaceId)
