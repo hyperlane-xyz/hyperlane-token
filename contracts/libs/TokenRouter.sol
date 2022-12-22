@@ -14,6 +14,11 @@ abstract contract TokenRouter is Router {
     using Message for bytes;
 
     /**
+     * @notice Gas amount to use for destination chain processing, should be overriden by implementors
+     */
+    uint256 internal immutable gasAmount = 21000;
+
+    /**
      * @dev Emitted on `transferRemote` when a transfer message is dispatched.
      * @param destination The identifier of the destination chain.
      * @param recipient The address of the recipient on the destination chain.
@@ -49,35 +54,12 @@ abstract contract TokenRouter is Router {
         uint32 _destination,
         bytes32 _recipient,
         uint256 _amountOrId
-    ) external {
-        bytes memory metadata = _transferFromSender(_amountOrId);
-        _dispatch(
-            _destination,
-            Message.format(_recipient, _amountOrId, metadata)
-        );
-        emit SentTransferRemote(_destination, _recipient, _amountOrId);
-    }
-
-    /**
-     * @notice Variant of `transferRemote` that pays for gas
-     * @dev Delegates transfer logic to `_transferFromSender` implementation.
-     * @dev Emits `SentTransferRemote` event on the origin chain.
-     * @param _destination The identifier of the destination chain.
-     * @param _recipient The address of the recipient on the destination chain.
-     * @param _amountOrId The amount or identifier of tokens to be sent to the remote recipient.
-     * @param _gasAmount The amount of destination gas to pay for to the IGP
-     */
-    function transferRemote(
-        uint32 _destination,
-        bytes32 _recipient,
-        uint256 _amountOrId,
-        uint256 _gasAmount
     ) external payable {
         bytes memory metadata = _transferFromSender(_amountOrId);
         _dispatchWithGas(
             _destination,
             Message.format(_recipient, _amountOrId, metadata),
-            _gasAmount,
+            gasAmount,
             msg.value,
             msg.sender
         );

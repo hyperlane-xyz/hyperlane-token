@@ -41,7 +41,6 @@ const tokenId = 10;
 const tokenId2 = 20;
 const tokenId3 = 30;
 const tokenId4 = 40;
-const testInterchainGasAmount = 123;
 const testInterchainGasPayment = 123456789;
 
 for (const withCollateral of [true, false]) {
@@ -179,7 +178,7 @@ for (const withCollateral of [true, false]) {
           ).to.be.revertedWith('ERC721: invalid token ID');
         }
         await expect(
-          local['transferRemote(uint32,bytes32,uint256)'](
+          local.transferRemote(
             remoteDomain,
             utils.addressToBytes32(recipient.address),
             invalidTokenId,
@@ -188,7 +187,7 @@ for (const withCollateral of [true, false]) {
       });
 
       it('should allow for remote transfers', async () => {
-        await local['transferRemote(uint32,bytes32,uint256)'](
+        await local.transferRemote(
           remoteDomain,
           utils.addressToBytes32(recipient.address),
           tokenId2,
@@ -212,7 +211,7 @@ for (const withCollateral of [true, false]) {
           const remoteUri = remote as HypERC721URIStorage;
           await expect(remoteUri.tokenURI(tokenId2)).to.be.revertedWith('');
 
-          await local['transferRemote(uint32,bytes32,uint256)'](
+          await local.transferRemote(
             remoteDomain,
             utils.addressToBytes32(recipient.address),
             tokenId2,
@@ -235,7 +234,7 @@ for (const withCollateral of [true, false]) {
         await expect(
           local
             .connect(recipient)
-            ['transferRemote(uint32,bytes32,uint256)'](
+            .transferRemote(
               remoteDomain,
               utils.addressToBytes32(recipient.address),
               tokenId2,
@@ -247,11 +246,10 @@ for (const withCollateral of [true, false]) {
         const interchainGasPaymaster =
           core.contractsMap[localChain].interchainGasPaymaster.contract;
         await expect(
-          local['transferRemote(uint32,bytes32,uint256,uint256)'](
+          local.transferRemote(
             remoteDomain,
             utils.addressToBytes32(recipient.address),
             tokenId3,
-            testInterchainGasAmount,
             {
               value: testInterchainGasPayment,
             },
@@ -261,7 +259,7 @@ for (const withCollateral of [true, false]) {
 
       it('should emit TransferRemote events', async () => {
         expect(
-          await local['transferRemote(uint32,bytes32,uint256)'](
+          await local.transferRemote(
             remoteDomain,
             utils.addressToBytes32(recipient.address),
             tokenId4,
