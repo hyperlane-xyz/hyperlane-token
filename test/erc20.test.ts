@@ -36,6 +36,8 @@ const localDomain = ChainNameToDomainId[localChain];
 const remoteDomain = ChainNameToDomainId[remoteChain];
 const totalSupply = 3000;
 const amount = 10;
+// Set arbitrarily for now
+const testInterchainGasAmount = 123;
 const testInterchainGasPayment = 123456789;
 
 const tokenConfig: SyntheticConfig = {
@@ -134,7 +136,7 @@ for (const withCollateral of [true, false]) {
     }
 
     it('should allow for remote transfers', async () => {
-      await local.transferRemote(
+      await local['transferRemote(uint32,bytes32,uint256)'](
         remoteDomain,
         utils.addressToBytes32(recipient.address),
         amount,
@@ -153,14 +155,15 @@ for (const withCollateral of [true, false]) {
       await expectBalance(remote, owner, totalSupply);
     });
 
-    it.skip('allows interchain gas payment for remote transfers', async () => {
+    it('allows interchain gas payment for remote transfers', async () => {
       const interchainGasPaymaster =
         core.contractsMap[localChain].interchainGasPaymaster.contract;
       await expect(
-        local.transferRemote(
+        local['transferRemote(uint32,bytes32,uint256,uint256)'](
           remoteDomain,
           utils.addressToBytes32(recipient.address),
           amount,
+          testInterchainGasAmount,
           {
             value: testInterchainGasPayment,
           },
@@ -175,7 +178,7 @@ for (const withCollateral of [true, false]) {
       await expect(
         local
           .connect(recipient)
-          .transferRemote(
+          ['transferRemote(uint32,bytes32,uint256)'](
             remoteDomain,
             utils.addressToBytes32(recipient.address),
             amount,
@@ -185,7 +188,7 @@ for (const withCollateral of [true, false]) {
 
     it('should emit TransferRemote events', async () => {
       expect(
-        await local.transferRemote(
+        await local['transferRemote(uint32,bytes32,uint256)'](
           remoteDomain,
           utils.addressToBytes32(recipient.address),
           amount,
