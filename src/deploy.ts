@@ -51,7 +51,7 @@ export class HypERC20Deployer<
         chain,
         new HypERC20__factory(),
         'HypERC20',
-        [],
+        [config.gasAmount || DEFAULT_IGP_GAS_AMOUNT],
       );
       await connection.handleTx(router.initialize(
         config.mailbox,
@@ -98,7 +98,7 @@ export class HypERC721Deployer<
         chain,
         isUriConfig(config) ? new HypERC721URIStorage__factory() : new HypERC721__factory(),
         `HypERC721${isUriConfig(config) ? 'URIStorage' : ''}`,
-        [],
+        [config.gasAmount || DEFAULT_IGP_GAS_AMOUNT],
       );
       await connection.handleTx(router.initialize(
         config.mailbox,
