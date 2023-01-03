@@ -41,6 +41,9 @@ task('deploy-trade-route', 'Deploy a trade route')
 
     const deployer = new HypERC20Deployer(multiProvider, config, undefined);
     await deployer.deploy();
+
+    console.log('Deployment successful. Deployed contracts:')
+    console.log(deployer.deployedContracts)
   });
 
 /**
