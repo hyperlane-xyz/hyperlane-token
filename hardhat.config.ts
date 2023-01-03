@@ -1,7 +1,7 @@
 import '@nomiclabs/hardhat-ethers';
 import '@nomiclabs/hardhat-waffle';
 import '@typechain/hardhat';
-import * as ethers from 'ethers';
+import { ethers } from 'ethers';
 import 'hardhat-gas-reporter';
 import { task, types } from 'hardhat/config';
 import 'solidity-coverage';
