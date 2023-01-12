@@ -138,7 +138,7 @@ for (const withCollateral of [true, false]) {
         remoteDomain,
         utils.addressToBytes32(recipient.address),
         amount,
-        { value: 1 }
+        { value: 1 },
       );
 
       await expectBalance(local, recipient, 0);
@@ -180,7 +180,7 @@ for (const withCollateral of [true, false]) {
             remoteDomain,
             utils.addressToBytes32(recipient.address),
             amount,
-            { value: 1 }
+            { value: 1 },
           ),
       ).to.be.revertedWith(revertReason);
     });
@@ -191,7 +191,7 @@ for (const withCollateral of [true, false]) {
           remoteDomain,
           utils.addressToBytes32(recipient.address),
           amount,
-          { value: 1 }
+          { value: 1 },
         ),
       )
         .to.emit(local, 'SentTransferRemote')
