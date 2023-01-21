@@ -1,0 +1,9 @@
+{
+  "goerli": {
+    "id": 5,
+    "confirmations": 1,
+    "rpcUrl": "https://eth-goerli.public.blastapi.io",
+    "blockExplorerUrl": "https://goerli.etherscan.io",
+    "blockExplorerApiUrl": "https://api-goerli.etherscan.io"
+  }
+}
