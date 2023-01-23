@@ -80,9 +80,11 @@ async function deployWarpRoute() {
         blockExplorerApiUrl: chainConfig.blockExplorerApiUrl,
         overrides: chainConfig.overrides,
       };
-    } else {
+    } else if (chainConnectionConfigs[chain]) {
       // Use SDK default
       multiProviderConfig[chain] = chainConnectionConfigs[chain];
+    } else {
+      throw new Error(`No chain config found for ${chain}`);
     }
   }
 
