@@ -45,20 +45,20 @@ async function deployWarpRoute() {
 
   console.log('Reading warp route configs');
 
-  const tokenConfig = JSON.parse(
+  const tokenConfigs = JSON.parse(
     fs.readFileSync(path.resolve(tokenConfigPath), 'utf-8'),
   );
-  const targetChains = Object.keys(tokenConfig);
+  const targetChains = Object.keys(tokenConfigs);
   console.log(
     `Found token configs for ${targetChains.length} chains:`,
     targetChains.join(', '),
   );
 
-  const chainConfig = chainConfigPath
+  const chainConfigs = chainConfigPath
     ? JSON.parse(fs.readFileSync(path.resolve(chainConfigPath), 'utf-8'))
     : null;
-  if (chainConfig) {
-    const customChains = Object.keys(chainConfig);
+  if (chainConfigs) {
+    const customChains = Object.keys(chainConfigs);
     console.log(
       `Found custom configs for ${customChains.length} chains:`,
       customChains.join(', '),
@@ -67,16 +67,18 @@ async function deployWarpRoute() {
 
   let multiProviderConfig: ChainMap<any, IChainConnection> = {};
   for (const chain of targetChains) {
-    if (chainConfig && chainConfig[chain]) {
+    if (chainConfigs && chainConfigs[chain]) {
       // Use custom config
+      const chainConfig = chainConfigs[chain];
       multiProviderConfig[chain] = {
         provider: new ethers.providers.JsonRpcProvider(
-          chainConfig[chain].rpcUrl,
-          chainConfig[chain].id,
+          chainConfig.rpcUrl,
+          chainConfig.id,
         ),
-        confirmations: chainConfig[chain].confirmations || 1,
-        blockExplorerUrl: chainConfig[chain].blockExplorerUrl,
-        blockExplorerApiUrl: chainConfig[chain].blockExplorerApiUrl,
+        confirmations: chainConfig.confirmations || 1,
+        blockExplorerUrl: chainConfig.blockExplorerUrl,
+        blockExplorerApiUrl: chainConfig.blockExplorerApiUrl,
+        overrides: chainConfig.overrides,
       };
     } else {
       // Use SDK default
@@ -89,14 +91,14 @@ async function deployWarpRoute() {
 
   console.log('Preparing chain providers');
   const multiProvider = new MultiProvider(
-    objMap(chainConnectionConfigs, (_chain, conf) => ({
+    objMap(multiProviderConfig, (_chain, conf) => ({
       ...conf,
       signer: signer.connect(conf.provider),
     })),
   );
 
   console.log('Starting deployments');
-  const deployer = new HypERC20Deployer(multiProvider, tokenConfig, undefined);
+  const deployer = new HypERC20Deployer(multiProvider, tokenConfigs, undefined);
   await deployer.deploy();
 
   console.log('Deployments successful. Deployed contracts:');
