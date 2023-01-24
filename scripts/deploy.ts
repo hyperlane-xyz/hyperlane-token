@@ -13,6 +13,7 @@ import yargs from 'yargs';
 
 import {
   ChainMap,
+  ChainMetadata,
   IChainConnection,
   MultiProvider,
   chainConnectionConfigs,
@@ -69,15 +70,16 @@ async function deployWarpRoute() {
   for (const chain of targetChains) {
     if (chainConfigs && chainConfigs[chain]) {
       // Use custom config
-      const chainConfig = chainConfigs[chain];
+      const chainConfig = chainConfigs[chain] as ChainMetadata;
       multiProviderConfig[chain] = {
         provider: new ethers.providers.JsonRpcProvider(
-          chainConfig.rpcUrl,
+          chainConfig.publicRpcUrls[0].http,
           chainConfig.id,
         ),
-        confirmations: chainConfig.confirmations || 1,
-        blockExplorerUrl: chainConfig.blockExplorerUrl,
-        blockExplorerApiUrl: chainConfig.blockExplorerApiUrl,
+        confirmations: chainConfig.blocks.confirmations,
+        blockExplorerUrl: chainConfig.blockExplorers[0].url,
+        blockExplorerApiUrl: chainConfig.blockExplorers[0].apiUrl,
+        // @ts-ignore
         overrides: chainConfig.overrides,
       };
     } else if (chainConnectionConfigs[chain]) {
