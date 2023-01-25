@@ -100,6 +100,7 @@ async function deployWarpRoute() {
       signer: signer.connect(conf.provider),
     })),
   );
+  console.log(multiProvider.chains());
 
   console.log('Starting deployments');
   const deployer = new HypERC20Deployer(multiProvider, tokenConfigs, undefined);
