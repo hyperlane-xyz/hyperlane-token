@@ -88,6 +88,8 @@ async function deployWarpRoute() {
     }
   }
 
+  console.log(multiProviderConfig);
+
   console.log('Preparing wallet');
   const signer = new ethers.Wallet(privateKey);
 
