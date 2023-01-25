@@ -10,8 +10,8 @@ import {IERC721MetadataUpgradeable} from "@openzeppelin/contracts-upgradeable/to
  * @author Abacus Works
  */
 contract HypERC721URICollateral is HypERC721Collateral {
-    constructor(address erc721, uint256 gasAmount)
-        HypERC721Collateral(erc721, gasAmount)
+    constructor(address erc721)
+        HypERC721Collateral(erc721)
     {}
 
     /**
@@ -26,6 +26,6 @@ contract HypERC721URICollateral is HypERC721Collateral {
     {
         HypERC721Collateral._transferFromSender(_tokenId);
         return
-            bytes(IERC721MetadataUpgradeable(wrappedToken).tokenURI(_tokenId));
+            bytes(IERC721MetadataUpgradeable(address(wrappedToken)).tokenURI(_tokenId));
     }
 }

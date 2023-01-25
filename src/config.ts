@@ -1,6 +1,6 @@
 import { ethers } from 'ethers';
 
-import { RouterConfig } from '@hyperlane-xyz/sdk';
+import { GasRouterConfig, RouterConfig } from '@hyperlane-xyz/sdk';
 
 export enum TokenType {
   synthetic = 'synthetic',
@@ -14,12 +14,10 @@ export type SyntheticConfig = {
   name: string;
   symbol: string;
   totalSupply: ethers.BigNumberish;
-  gasAmount?: ethers.BigNumberish;
 };
 export type CollateralConfig = {
   type: TokenType.collateral | TokenType.collateralUri;
   token: string;
-  gasAmount?: ethers.BigNumberish;
 };
 
 export type TokenConfig = SyntheticConfig | CollateralConfig;
@@ -37,8 +35,8 @@ export const isUriConfig = (config: RouterConfig & TokenConfig) =>
   config.type === TokenType.syntheticUri ||
   config.type === TokenType.collateralUri;
 
-export type HypERC20Config = RouterConfig & TokenConfig;
-export type HypERC20CollateralConfig = RouterConfig & CollateralConfig;
+export type HypERC20Config = GasRouterConfig & TokenConfig;
+export type HypERC20CollateralConfig = GasRouterConfig & CollateralConfig;
 
-export type HypERC721Config = RouterConfig & TokenConfig;
-export type HypERC721CollateralConfig = RouterConfig & CollateralConfig;
+export type HypERC721Config = GasRouterConfig & TokenConfig;
+export type HypERC721CollateralConfig = GasRouterConfig & CollateralConfig;
