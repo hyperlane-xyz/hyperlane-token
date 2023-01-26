@@ -136,7 +136,7 @@ for (const withCollateral of [true, false]) {
       });
     }
 
-    it.skip('benchmark handle gas overhead', async () => {
+    it('benchmark handle gas overhead', async () => {
       const localRaw = local.connect(ethers.provider);
       const mailboxAddress = core.contractsMap[localChain].mailbox.contract.address;
       if (withCollateral) {
@@ -154,7 +154,6 @@ for (const withCollateral of [true, false]) {
         core.contractsMap[localChain].interchainGasPaymaster.contract;
       const handleGasOverhead = await local.handleGasOverhead(remoteDomain);
       const interchainGasPayment = await interchainGasPaymaster.quoteGasPayment(remoteDomain, handleGasOverhead);
-      console.log({handleGasOverhead, interchainGasPayment});
       await local.transferRemote(
         remoteDomain,
         utils.addressToBytes32(recipient.address),
@@ -175,7 +174,7 @@ for (const withCollateral of [true, false]) {
       await expectBalance(remote, owner, totalSupply);
     });
 
-    it.skip('allows interchain gas payment for remote transfers', async () => {
+    it('allows interchain gas payment for remote transfers', async () => {
       const interchainGasPaymaster =
         core.contractsMap[localChain].interchainGasPaymaster.contract;
       await expect(
