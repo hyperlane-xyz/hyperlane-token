@@ -30,7 +30,9 @@ import {
   HypERC721Collateral,
   HypERC721URICollateral,
   HypERC721URIStorage,
+  HypERC721__factory,
 } from '../src/types';
+import { BigNumber } from 'ethers';
 
 const localChain = 'test1';
 const remoteChain = 'test2';
@@ -191,6 +193,20 @@ for (const withCollateral of [true, false]) {
         ).to.be.revertedWith('ERC721: invalid token ID');
       });
 
+      it.only('benchmark handle gas overhead', async () => {
+        const localRaw = local.connect(ethers.provider);
+        const mailboxAddress = core.contractsMap[localChain].mailbox.contract.address;
+        if (withCollateral) {
+          const tokenAddress = await (local as HypERC721Collateral).wrappedToken();
+          const token = HypERC721__factory.connect(tokenAddress, owner);
+          await token.transferFrom(owner.address, local.address, tokenId);
+        }
+        const message = `${utils.addressToBytes32(recipient.address)}${BigNumber.from(tokenId).toHexString().slice(2).padStart(64, '0')}`;
+        const gas = await localRaw.estimateGas.handle(remoteDomain, utils.addressToBytes32(remote.address), message, { from: mailboxAddress })
+        console.log(gas);
+      })
+  
+
       it('should allow for remote transfers', async () => {
         await local.transferRemote(
           remoteDomain,
@@ -249,6 +265,19 @@ for (const withCollateral of [true, false]) {
             ),
         ).to.be.revertedWith(revertReason);
       });
+
+      it.only('benchmark handle gas overhead', async () => {
+        const localRaw = local.connect(ethers.provider);
+        const mailboxAddress = core.contractsMap[localChain].mailbox.contract.address;
+        if (withCollateral) {
+          const tokenAddress = await (local as HypERC721Collateral).wrappedToken();
+          const token = ERC721__factory.connect(tokenAddress, owner);
+          await token.transferFrom(owner.address, local.address, tokenId);
+        }
+        const message = `${utils.addressToBytes32(recipient.address)}${BigNumber.from(tokenId).toHexString().slice(2).padStart(64, '0')}`;
+        const gas = await localRaw.estimateGas.handle(remoteDomain, utils.addressToBytes32(remote.address), message, { from: mailboxAddress })
+        console.log(gas);
+      })
 
       it.skip('allows interchain gas payment for remote transfers', async () => {
         const interchainGasPaymaster =

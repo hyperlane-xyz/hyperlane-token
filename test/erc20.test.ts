@@ -29,6 +29,7 @@ import {
   HypERC20,
   HypERC20Collateral,
 } from '../src/types';
+import { BigNumber } from 'ethers';
 
 const localChain = 'test1';
 const remoteChain = 'test2';
@@ -37,7 +38,6 @@ const remoteDomain = ChainNameToDomainId[remoteChain];
 const totalSupply = 3000;
 const amount = 10;
 const testInterchainGasPayment = 123456789;
-const handleGasOverhead = 10;
 
 const tokenConfig: SyntheticConfig = {
   type: TokenType.synthetic,
@@ -71,7 +71,7 @@ for (const withCollateral of [true, false]) {
         ...coreConfig[key],
         ...tokenConfig,
         owner: owner.address,
-        handleGasOverhead
+        handleGasOverhead: 63264
       }));
 
       let erc20: ERC20 | undefined;
@@ -85,6 +85,7 @@ for (const withCollateral of [true, false]) {
           ...configWithTokenInfo.test1,
           type: TokenType.collateral,
           token: erc20.address,
+          handleGasOverhead: 67615
         };
       }
 
@@ -135,12 +136,30 @@ for (const withCollateral of [true, false]) {
       });
     }
 
+    it.skip('benchmark handle gas overhead', async () => {
+      const localRaw = local.connect(ethers.provider);
+      const mailboxAddress = core.contractsMap[localChain].mailbox.contract.address;
+      if (withCollateral) {
+        const tokenAddress = await (local as HypERC20Collateral).wrappedToken();
+        const token = ERC20__factory.connect(tokenAddress, owner);
+        await token.transfer(local.address, totalSupply);
+      }
+      const message = `${utils.addressToBytes32(recipient.address)}${BigNumber.from(totalSupply).toHexString().slice(2).padStart(64, '0')}`;
+      const gas = await localRaw.estimateGas.handle(remoteDomain, utils.addressToBytes32(remote.address), message, { from: mailboxAddress })
+      console.log(gas);
+    })
+
     it('should allow for remote transfers', async () => {
+      const interchainGasPaymaster =
+        core.contractsMap[localChain].interchainGasPaymaster.contract;
+      const handleGasOverhead = await local.handleGasOverhead(remoteDomain);
+      const interchainGasPayment = await interchainGasPaymaster.quoteGasPayment(remoteDomain, handleGasOverhead);
+      console.log({handleGasOverhead, interchainGasPayment});
       await local.transferRemote(
         remoteDomain,
         utils.addressToBytes32(recipient.address),
         amount,
-        { value: handleGasOverhead }
+        { value: interchainGasPayment }
       );
 
       await expectBalance(local, recipient, 0);
@@ -182,7 +201,7 @@ for (const withCollateral of [true, false]) {
             remoteDomain,
             utils.addressToBytes32(recipient.address),
             amount,
-            { value: handleGasOverhead }
+            { value: await local.handleGasOverhead(remoteDomain) }
           ),
       ).to.be.revertedWith(revertReason);
     });
@@ -193,7 +212,7 @@ for (const withCollateral of [true, false]) {
           remoteDomain,
           utils.addressToBytes32(recipient.address),
           amount,
-          { value: handleGasOverhead }
+          { value: await local.handleGasOverhead(remoteDomain) }
         ),
       )
         .to.emit(local, 'SentTransferRemote')

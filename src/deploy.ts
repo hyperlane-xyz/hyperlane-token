@@ -1,6 +1,6 @@
 import {
   ChainName,
-  GasRouterDeployer,
+  GasRouterDeployer
 } from '@hyperlane-xyz/sdk';
 
 import {

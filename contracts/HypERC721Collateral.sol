@@ -21,6 +21,10 @@ contract HypERC721Collateral is TokenRouter {
         wrappedToken = IERC721(erc721);
     }
 
+    function ownerOf(uint256 _tokenId) external view returns (address) {
+        return IERC721(wrappedToken).ownerOf(_tokenId);
+    }
+
     /**
      * @notice Initializes the Hyperlane router.
      * @param _mailbox The address of the mailbox contract.

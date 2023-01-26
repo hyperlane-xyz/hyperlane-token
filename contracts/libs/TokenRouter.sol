@@ -53,7 +53,9 @@ abstract contract TokenRouter is GasRouter {
         bytes memory metadata = _transferFromSender(_amountOrId);
         messageId = _dispatchWithGas(
             _destination,
-            Message.format(_recipient, _amountOrId, metadata)
+            Message.format(_recipient, _amountOrId, metadata),
+            msg.value, // interchain gas payment
+            msg.sender // refund address
         );
         emit SentTransferRemote(_destination, _recipient, _amountOrId);
     }
