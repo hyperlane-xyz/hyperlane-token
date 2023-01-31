@@ -39,7 +39,7 @@ contract HypERC721 is ERC721EnumerableUpgradeable, TokenRouter {
 
         __ERC721_init(_name, _symbol);
         for (uint256 i = 0; i < _mintAmount; i++) {
-            _mint(msg.sender, i);
+            _safeMint(msg.sender, i);
         }
     }
 
@@ -67,6 +67,6 @@ contract HypERC721 is ERC721EnumerableUpgradeable, TokenRouter {
         uint256 _tokenId,
         bytes calldata // no metadata
     ) internal virtual override {
-        _mint(_recipient, _tokenId);
+        _safeMint(_recipient, _tokenId);
     }
 }
