@@ -46,6 +46,7 @@ contract HypERC721Collateral is TokenRouter {
         override
         returns (bytes memory)
     {
+        // safeTransferFrom not used here because recipient is this contract
         IERC721(wrappedToken).transferFrom(msg.sender, address(this), _tokenId);
         return bytes(""); // no metadata
     }
@@ -59,6 +60,10 @@ contract HypERC721Collateral is TokenRouter {
         uint256 _tokenId,
         bytes calldata // no metadata
     ) internal override {
-        IERC721(wrappedToken).transferFrom(address(this), _recipient, _tokenId);
+        IERC721(wrappedToken).safeTransferFrom(
+            address(this),
+            _recipient,
+            _tokenId
+        );
     }
 }
