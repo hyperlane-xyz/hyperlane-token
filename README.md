@@ -23,7 +23,6 @@ graph TB
     Alice -- "transferRemote(Polygon, Bob, 5)" --> HYP_E
     HYP_E -- "dispatch(Polygon, (Bob, 5))" --> M_E
     M_E-.->Relayer
-    M_E-.->M_P
     Relayer -- "process(Ethereum, (Bob, 5))" --> M_P
     M_P-->|"handle(Ethereum, (Bob, 5))"|HYP_P
     HYP_P-.->Bob
