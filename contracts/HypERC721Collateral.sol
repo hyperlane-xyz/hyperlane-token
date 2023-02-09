@@ -36,6 +36,11 @@ contract HypERC721Collateral is TokenRouter {
         );
     }
 
+    // @inheritdoc IERC721
+    function balanceOf(address account) external view override returns (uint256) {
+        return IERC721(wrappedToken).balanceOf(account);
+    }
+
     /**
      * @dev Transfers `_tokenId` of `wrappedToken` from `msg.sender` to this contract.
      * @inheritdoc TokenRouter
