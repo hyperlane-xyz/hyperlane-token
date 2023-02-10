@@ -45,7 +45,12 @@ contract HypERC721URIStorage is HypERC721, ERC721URIStorageUpgradeable {
     }
 
     // @inheritdoc HypERC721
-    function balanceOf(address account) public view override(HypERC721, ERC721Upgradeable) returns (uint256) {
+    function balanceOf(address account)
+        public
+        view
+        override(HypERC721, ERC721Upgradeable)
+        returns (uint256)
+    {
         return HypERC721.balanceOf(account);
     }
 

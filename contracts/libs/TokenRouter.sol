@@ -28,7 +28,7 @@ abstract contract TokenRouter is Router, IHypToken {
         uint32 _destination,
         bytes32 _recipient,
         uint256 _amountOrId
-    ) external virtual payable {
+    ) external payable virtual {
         bytes memory metadata = _transferFromSender(_amountOrId);
         _dispatchWithGas(
             _destination,

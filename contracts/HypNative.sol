@@ -23,10 +23,10 @@ contract HypNative is TokenRouter {
      * @param _mailbox The address of the mailbox contract.
      * @param _interchainGasPaymaster The address of the interchain gas paymaster contract.
      */
-    function initialize(
-        address _mailbox,
-        address _interchainGasPaymaster
-    ) external initializer {
+    function initialize(address _mailbox, address _interchainGasPaymaster)
+        external
+        initializer
+    {
         // transfers ownership to `msg.sender`
         __HyperlaneConnectionClient_initialize(
             _mailbox,
@@ -42,7 +42,7 @@ contract HypNative is TokenRouter {
         uint32 _destination,
         bytes32 _recipient,
         uint256 _amount
-    ) external override payable {
+    ) external payable override {
         require(msg.value >= _amount, "msg.value < amount");
         uint256 gasPayment = msg.value - _amount;
         _dispatchWithGas(

@@ -37,7 +37,12 @@ contract HypERC20Collateral is TokenRouter {
     }
 
     // @inheritdoc IERC20
-    function balanceOf(address account) external view override returns (uint256) {
+    function balanceOf(address account)
+        external
+        view
+        override
+        returns (uint256)
+    {
         return wrappedToken.balanceOf(account);
     }
 

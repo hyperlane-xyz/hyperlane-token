@@ -45,7 +45,12 @@ contract HypERC20 is ERC20Upgradeable, TokenRouter {
     }
 
     // @inheritdoc ERC20Upgradeable
-    function balanceOf(address account) public view override(ERC20Upgradeable, IHypToken) returns (uint256) {
+    function balanceOf(address account)
+        public
+        view
+        override(ERC20Upgradeable, IHypToken)
+        returns (uint256)
+    {
         return ERC20Upgradeable.balanceOf(account);
     }
 
