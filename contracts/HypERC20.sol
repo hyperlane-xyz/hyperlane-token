@@ -2,7 +2,6 @@
 pragma solidity >=0.8.0;
 
 import {TokenRouter} from "./libs/TokenRouter.sol";
-import {IHypToken} from "../interfaces/IHypToken.sol";
 
 import {ERC20Upgradeable} from "@openzeppelin/contracts-upgradeable/token/ERC20/ERC20Upgradeable.sol";
 
@@ -42,11 +41,6 @@ contract HypERC20 is ERC20Upgradeable, TokenRouter {
         // Initialize ERC20 metadata
         __ERC20_init(_name, _symbol);
         _mint(msg.sender, _totalSupply);
-    }
-
-    // @inheritdoc ERC20Upgradeable
-    function balanceOf(address account) public view override(ERC20Upgradeable, IHypToken) returns (uint256) {
-        return ERC20Upgradeable.balanceOf(account);
     }
 
     /**

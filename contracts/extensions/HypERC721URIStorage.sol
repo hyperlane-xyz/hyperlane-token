@@ -44,11 +44,6 @@ contract HypERC721URIStorage is HypERC721, ERC721URIStorageUpgradeable {
         _setTokenURI(_tokenId, string(_tokenURI)); // requires minted
     }
 
-    // @inheritdoc HypERC721
-    function balanceOf(address account) public view override(HypERC721, ERC721Upgradeable) returns (uint256) {
-        return HypERC721.balanceOf(account);
-    }
-
     function tokenURI(uint256 tokenId)
         public
         view

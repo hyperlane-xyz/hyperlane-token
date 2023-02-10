@@ -2,11 +2,8 @@
 pragma solidity >=0.8.0;
 
 import {TokenRouter} from "./libs/TokenRouter.sol";
-import {IHypToken} from "../interfaces/IHypToken.sol";
 
 import {ERC721EnumerableUpgradeable} from "@openzeppelin/contracts-upgradeable/token/ERC721/extensions/ERC721EnumerableUpgradeable.sol";
-import {IERC721Upgradeable} from "@openzeppelin/contracts-upgradeable/token/ERC721/IERC721Upgradeable.sol";
-import {ERC721Upgradeable} from "@openzeppelin/contracts-upgradeable/token/ERC721/ERC721Upgradeable.sol";
 
 /**
  * @title Hyperlane ERC721 Token Router that extends ERC721 with remote transfer functionality.
@@ -44,11 +41,6 @@ contract HypERC721 is ERC721EnumerableUpgradeable, TokenRouter {
         for (uint256 i = 0; i < _mintAmount; i++) {
             _mint(msg.sender, i);
         }
-    }
-
-    // @inheritdoc ERC721EnumerableUpgradeable
-    function balanceOf(address account) public virtual view override(IERC721Upgradeable, ERC721Upgradeable, IHypToken) returns (uint256) {
-        return ERC721Upgradeable.balanceOf(account);
     }
 
     /**

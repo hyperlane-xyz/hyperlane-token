@@ -2,7 +2,6 @@
 pragma solidity >=0.8.0;
 
 import {TokenRouter} from "./libs/TokenRouter.sol";
-import {IHypToken} from "../interfaces/IHypToken.sol";
 import {Message} from "./libs/Message.sol";
 import {Address} from "@openzeppelin/contracts/utils/Address.sol";
 
@@ -23,10 +22,10 @@ contract HypNative is TokenRouter {
      * @param _mailbox The address of the mailbox contract.
      * @param _interchainGasPaymaster The address of the interchain gas paymaster contract.
      */
-    function initialize(
-        address _mailbox,
-        address _interchainGasPaymaster
-    ) external initializer {
+    function initialize(address _mailbox, address _interchainGasPaymaster)
+        external
+        initializer
+    {
         // transfers ownership to `msg.sender`
         __HyperlaneConnectionClient_initialize(
             _mailbox,
@@ -42,7 +41,7 @@ contract HypNative is TokenRouter {
         uint32 _destination,
         bytes32 _recipient,
         uint256 _amount
-    ) external override payable {
+    ) external payable override {
         require(msg.value >= _amount, "msg.value < amount");
         uint256 gasPayment = msg.value - _amount;
         _dispatchWithGas(
@@ -55,15 +54,7 @@ contract HypNative is TokenRouter {
         emit SentTransferRemote(_destination, _recipient, _amount);
     }
 
-    /**
-     * @inheritdoc IHypToken
-     */
-    function balanceOf(address _account)
-        external
-        view
-        override
-        returns (uint256)
-    {
+    function balanceOf(address _account) external view returns (uint256) {
         return _account.balance;
     }
 
