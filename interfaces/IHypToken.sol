@@ -44,7 +44,6 @@ interface IHypToken {
         uint256 _amountOrId
     ) external payable;
 
-
     // mirror ERC20/ERC721 functions for convenience
     function balanceOf(address _account) external view returns (uint256);
 }

@@ -2,6 +2,7 @@
 pragma solidity >=0.8.0;
 
 import {TokenRouter} from "./libs/TokenRouter.sol";
+import {IHypToken} from "../interfaces/IHypToken.sol";
 import {Message} from "./libs/Message.sol";
 import {Address} from "@openzeppelin/contracts/utils/Address.sol";
 
@@ -33,6 +34,10 @@ contract HypNative is TokenRouter {
         );
     }
 
+    /**
+     * @inheritdoc TokenRouter
+     * @dev uses (`msg.value` - `_amount`) as interchain gas payment and `msg.sender` as refund address.
+     */
     function transferRemote(
         uint32 _destination,
         bytes32 _recipient,
@@ -50,6 +55,9 @@ contract HypNative is TokenRouter {
         emit SentTransferRemote(_destination, _recipient, _amount);
     }
 
+    /**
+     * @inheritdoc IHypToken
+     */
     function balanceOf(address _account)
         external
         view
@@ -60,7 +68,8 @@ contract HypNative is TokenRouter {
     }
 
     /**
-     * @dev No-op
+     * @dev No-op because native amount is transferred in `msg.value`
+     * @dev Compiler will not include this in the bytecode.
      * @inheritdoc TokenRouter
      */
     function _transferFromSender(uint256)
