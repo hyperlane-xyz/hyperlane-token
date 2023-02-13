@@ -49,7 +49,7 @@ export class HypERC20App<Chain extends ChainName> extends HyperlaneTokenApp<
     const signerAddress = await chainConnection.signer!.getAddress();
     const balance = await originRouter.balanceOf(signerAddress);
     if (balance.lt(amount))
-      throw new Error(
+      console.warn(
         `Signer ${signerAddress} has insufficient balance ${balance}, needs ${amount} on ${origin}`,
       );
     return super.transfer(origin, destination, recipient, amount);
@@ -71,7 +71,7 @@ export class HypERC721App<Chain extends ChainName> extends HyperlaneTokenApp<
     const signerAddress = await chainConnection.signer!.getAddress();
     const owner = await originRouter.ownerOf(tokenId);
     if (signerAddress != owner)
-      throw new Error(`Signer ${signerAddress} not owner of token ${tokenId} on ${origin}`);
+      console.warn(`Signer ${signerAddress} not owner of token ${tokenId} on ${origin}`);
     return super.transfer(origin, destination, recipient, tokenId);
   }
 }
