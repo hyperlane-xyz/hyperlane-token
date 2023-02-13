@@ -1,11 +1,11 @@
 {
   "name": "@hyperlane-xyz/hyperlane-token",
   "description": "A template for interchain ERC20 and ERC721 tokens using Hyperlane",
-  "version": "1.1.1",
+  "version": "1.1.3",
   "dependencies": {
-    "@hyperlane-xyz/core": "1.1.1",
-    "@hyperlane-xyz/sdk": "1.1.1",
-    "@hyperlane-xyz/utils": "1.1.1",
+    "@hyperlane-xyz/core": "1.1.3",
+    "@hyperlane-xyz/sdk": "1.1.3",
+    "@hyperlane-xyz/utils": "1.1.3",
     "@openzeppelin/contracts-upgradeable": "^4.8.0",
     "ethers": "^5.7.2"
   },
@@ -56,7 +56,8 @@
     "coverage": "hardhat coverage",
     "lint": "eslint . --ext .ts",
     "prettier": "prettier --write ./contracts ./test",
-    "test": "hardhat test ./test/*.test.ts"
+    "test": "hardhat test ./test/*.test.ts",
+    "deploy-warp-route": "DEBUG=* ts-node scripts/deploy"
   },
   "types": "dist/index.d.ts"
 }
