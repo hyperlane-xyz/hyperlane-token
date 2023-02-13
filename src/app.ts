@@ -22,11 +22,12 @@ class HyperlaneTokenApp<
     amountOrId: BigNumberish,
   ) {
     const originRouter = this.getContracts(origin).router;
-    const destinationDomain = ChainNameToDomainId[destination];
-    const gasPayment = await originRouter.quoteGasPayment(destinationDomain);
+    const destinationChainConnection = this.multiProvider.getChainConnection(destination);
+    const destinationNetwork = await destinationChainConnection.provider.getNetwork();
+    const gasPayment = await originRouter.quoteGasPayment(destinationNetwork.chainId);
     const chainConnection = this.multiProvider.getChainConnection(origin);
     return chainConnection.handleTx(
-      originRouter.transferRemote(destinationDomain, recipient, amountOrId, {
+      originRouter.transferRemote(destinationNetwork.chainId, recipient, amountOrId, {
         value: gasPayment,
       }),
     );
