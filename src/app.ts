@@ -6,7 +6,7 @@ import {
   GasRouterApp,
   RouterContracts,
 } from '@hyperlane-xyz/sdk';
-import { Address } from '@hyperlane-xyz/utils/dist/src/types';
+import { types } from '@hyperlane-xyz/utils';
 
 import { HypERC20Contracts, HypERC721Contracts } from './contracts';
 import { TokenRouter } from './types';
@@ -18,7 +18,7 @@ class HyperlaneTokenApp<
   async transfer<Origin extends Chain>(
     origin: Origin,
     destination: Exclude<Chain, Origin>,
-    recipient: Address,
+    recipient: types.Address,
     amountOrId: BigNumberish,
   ) {
     const originRouter = this.getContracts(origin).router;
@@ -40,7 +40,7 @@ export class HypERC20App<Chain extends ChainName> extends HyperlaneTokenApp<
   async transfer<Origin extends Chain>(
     origin: Origin,
     destination: Exclude<Chain, Origin>,
-    recipient: Address,
+    recipient: types.Address,
     amount: BigNumberish,
   ) {
     const originRouter = this.getContracts(origin).router;
@@ -62,7 +62,7 @@ export class HypERC721App<Chain extends ChainName> extends HyperlaneTokenApp<
   async transfer<Origin extends Chain>(
     origin: Origin,
     destination: Exclude<Chain, Origin>,
-    recipient: Address,
+    recipient: types.Address,
     tokenId: BigNumberish,
   ) {
     const originRouter = this.getContracts(origin).router;
