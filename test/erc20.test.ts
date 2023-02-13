@@ -136,7 +136,7 @@ for (const withCollateral of [true, false]) {
       });
     }
 
-    it.only('benchmark handle gas overhead', async () => {
+    it('benchmark handle gas overhead', async () => {
       const localRaw = local.connect(ethers.provider);
       const mailboxAddress =
         core.contractsMap[localChain].mailbox.contract.address;
