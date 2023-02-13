@@ -1,6 +1,6 @@
 # Hyperlane Warp Route
 
-This repo contains the base Hyperlane ERC20 and ERC721 tokens (HypERC20 and HypERC721). These tokens extend the base standards with an additional `transferRemote` function. Warp Routes are way of arranging these contracts to make existing assets interchain. Read more about Warp Routes and how to deploy your own at [Warp API docs](https://docs.hyperlane.xyz/docs/developers/warp-api).
+This repo contains the base Hyperlane ERC20 and ERC721 tokens (HypERC20 and HypERC721). These tokens extend the base standards with an additional `transferRemote` function. Warp Routes make any token or native asset interchain without custom contracts. Read more about Warp Routes and how to deploy your own at [Warp API docs](https://docs.hyperlane.xyz/docs/developers/warp-api).
 
 ```mermaid
 %%{ init: {
@@ -24,7 +24,7 @@ graph TB
         Token_E[ERC20]
         HYP_E[HYP-ERC20]
         M_E[(Mailbox)]
-        POS_E[Proof of Stake]
+        %% POS_E[Proof of Stake]
     end
 
     Alice == "0. approve(HYP, infinity)" ==> Token_E
@@ -36,7 +36,7 @@ graph TB
     %% M_E-."indexing".->Watcher
     M_E -. "indexing" .-> Validator
 
-    Validator == "staking" ==> POS_E
+    %% Validator == "staking" ==> POS_E
     %% Watcher == "slashing" ==> POS_E
     Validator -. "signing" .-> ISM_STORE
 
