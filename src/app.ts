@@ -2,7 +2,6 @@ import { BigNumberish } from 'ethers';
 
 import {
   ChainName,
-  ChainNameToDomainId,
   GasRouterApp,
   RouterContracts,
 } from '@hyperlane-xyz/sdk';
