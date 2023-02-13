@@ -97,7 +97,7 @@ for (const withCollateral of [true, false]) {
           ...coreConfig[key],
           ...configMap[key],
           owner: owner.address,
-          gas
+          gas,
         }));
 
         let erc721: ERC721 | undefined;
