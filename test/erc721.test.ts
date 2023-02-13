@@ -252,7 +252,7 @@ for (const withCollateral of [true, false]) {
         ).to.be.revertedWith(revertReason);
       });
 
-      it.only('benchmark handle gas overhead', async () => {
+      it.skip('benchmark handle gas overhead', async () => {
         const localRaw = local.connect(ethers.provider);
         const mailboxAddress =
           core.contractsMap[localChain].mailbox.contract.address;
