@@ -25,6 +25,7 @@ import { HypERC721Deployer } from '../src/deploy';
 import {
   ERC721,
   ERC721Test__factory,
+  ERC721__factory,
   HypERC721,
   HypERC721Collateral,
   HypERC721URICollateral,
@@ -181,7 +182,6 @@ for (const withCollateral of [true, false]) {
             remoteDomain,
             utils.addressToBytes32(recipient.address),
             invalidTokenId,
-            { value: testInterchainGasPayment }
           ),
         ).to.be.revertedWith('ERC721: invalid token ID');
       });
@@ -191,7 +191,6 @@ for (const withCollateral of [true, false]) {
           remoteDomain,
           utils.addressToBytes32(recipient.address),
           tokenId2,
-          { value: testInterchainGasPayment }
         );
 
         await expectBalance(local, recipient, 0);
@@ -216,7 +215,6 @@ for (const withCollateral of [true, false]) {
             remoteDomain,
             utils.addressToBytes32(recipient.address),
             tokenId2,
-            { value: testInterchainGasPayment }
           );
 
           await expect(remoteUri.tokenURI(tokenId2)).to.be.revertedWith('');
@@ -240,7 +238,6 @@ for (const withCollateral of [true, false]) {
               remoteDomain,
               utils.addressToBytes32(recipient.address),
               tokenId2,
-              { value: testInterchainGasPayment }
             ),
         ).to.be.revertedWith(revertReason);
       });
@@ -266,7 +263,6 @@ for (const withCollateral of [true, false]) {
             remoteDomain,
             utils.addressToBytes32(recipient.address),
             tokenId4,
-            { value: testInterchainGasPayment }
           ),
         )
           .to.emit(local, 'SentTransferRemote')
@@ -284,5 +280,15 @@ const expectBalance = async (
   signer: SignerWithAddress,
   balance: number,
 ) => {
-  expect(await token.balanceOf(signer.address)).to.eq(balance);
+  if (Object.keys(token.interface.functions).includes('wrappedToken()')) {
+    const wrappedToken = await (token as HypERC721Collateral).wrappedToken();
+    token = ERC721__factory.connect(wrappedToken, signer);
+  }
+  return expectTokenBalance(token as HypERC721, signer, balance);
 };
+
+const expectTokenBalance = async (
+  token: ERC721,
+  signer: SignerWithAddress,
+  balance: number,
+) => expect(await token.balanceOf(signer.address)).to.eq(balance);
