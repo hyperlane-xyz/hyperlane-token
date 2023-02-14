@@ -1,61 +1,113 @@
-import { ethers, Wallet } from 'ethers';
+/**
+ * Script to deploy warp routes
+ * Accepts 3 arguments:
+ *   - private-key : Hex string of private key. Note: deployment requires funds on all chains
+ *   - token-config : Path to token config JSON file (see example in ./configs)
+ *   - chain-config : (Optional) Path to chain config JSON file (see example in ./configs)
+ * Example: yarn ts-node scripts/deploy.ts --private-key $PRIVATE_KEY --token-config ./configs/warp-route-token-config.json
+ */
+import { ethers } from 'ethers';
+import fs from 'fs';
+import path from 'path';
+import yargs from 'yargs';
 
 import {
-  Chains,
-  HyperlaneCore,
+  ChainMap,
+  ChainMetadata,
+  IChainConnection,
   MultiProvider,
+  chainConnectionConfigs,
   objMap,
+  serializeContracts,
 } from '@hyperlane-xyz/sdk';
-import { RouterConfig, chainConnectionConfigs } from '@hyperlane-xyz/sdk';
 
-import { TokenConfig, TokenType } from '../src/config';
 import { HypERC20Deployer } from '../src/deploy';
 
-const connectionConfigs = {
-  goerli: {
-    ...chainConnectionConfigs.goerli,
-    provider: new ethers.providers.JsonRpcProvider(
-      'https://eth-goerli.public.blastapi.io',
-      5,
-    ),
-  },
-  fuji: chainConnectionConfigs.fuji,
-  alfajores: chainConnectionConfigs.alfajores,
-  moonbasealpha: chainConnectionConfigs.moonbasealpha,
-};
+async function deployWarpRoute() {
+  const argv = await yargs
+    .option('private-key', {
+      type: 'string',
+      describe: 'Private key for signing transactions',
+      demandOption: true,
+    })
+    .option('token-config', {
+      type: 'string',
+      describe: 'Path to token config JSON file',
+      demandOption: true,
+    })
+    .option('chain-config', {
+      type: 'string',
+      describe: 'Path to chain config JSON file',
+    }).argv;
 
-async function deployNFTWrapper() {
-  console.info('Getting signer');
-  const signer = new Wallet(
-    'pkey',
+  const privateKey = argv['private-key'];
+  const tokenConfigPath = argv['token-config'];
+  const chainConfigPath = argv['chain-config'];
+
+  console.log('Reading warp route configs');
+
+  const tokenConfigs = JSON.parse(
+    fs.readFileSync(path.resolve(tokenConfigPath), 'utf-8'),
+  );
+  const targetChains = Object.keys(tokenConfigs);
+  console.log(
+    `Found token configs for ${targetChains.length} chains:`,
+    targetChains.join(', '),
   );
 
-  const multiProvider = new MultiProvider(connectionConfigs);
-  multiProvider.rotateSigner(signer)
-  const core = HyperlaneCore.fromEnvironment('testnet2', multiProvider);
+  const chainConfigs = chainConfigPath
+    ? JSON.parse(fs.readFileSync(path.resolve(chainConfigPath), 'utf-8'))
+    : null;
+  if (chainConfigs) {
+    const customChains = Object.keys(chainConfigs);
+    console.log(
+      `Found custom configs for ${customChains.length} chains:`,
+      customChains.join(', '),
+    );
+  }
 
-  const config = objMap(connectionConfigs, (chain, c) => ({
-    type: TokenType.synthetic,
-      name: 'Dai',
-      symbol: 'DAI',
-      totalSupply: 0,
-      owner: signer.address,
-      mailbox: '0x1d3aAC239538e6F1831C8708803e61A9EA299Eec',
-      interchainGasPaymaster: core.getContracts(chain)
-        .interchainGasPaymaster.address,
-  } as TokenConfig & RouterConfig))
-  config.goerli = {
-      type: TokenType.collateral,
-      token: '0xb4fbf271143f4fbf7b91a5ded31805e42b2208d6',
-      owner: signer.address,
-      mailbox: '0x1d3aAC239538e6F1831C8708803e61A9EA299Eec',
-      interchainGasPaymaster: core.getContracts(Chains.goerli)
-        .interchainGasPaymaster.address,
-  } as TokenConfig & RouterConfig
+  const multiProviderConfig: ChainMap<any, IChainConnection> = {};
+  for (const chain of targetChains) {
+    if (chainConfigs && chainConfigs[chain]) {
+      // Use custom config
+      const chainConfig = chainConfigs[chain] as ChainMetadata;
+      multiProviderConfig[chain] = {
+        id: chainConfig.id,
+        provider: new ethers.providers.JsonRpcProvider(
+          chainConfig.publicRpcUrls[0].http,
+        ),
+        confirmations: chainConfig.blocks.confirmations,
+        // @ts-ignore
+        overrides: chainConfig.overrides,
+      };
+    } else if (chainConnectionConfigs[chain]) {
+      // Use SDK default
+      multiProviderConfig[chain] = chainConnectionConfigs[chain];
+    } else {
+      throw new Error(`No chain config found for ${chain}`);
+    }
+  }
 
-  const deployer = new HypERC20Deployer(multiProvider, config, core);
+  console.log('Preparing wallet');
+  const signer = new ethers.Wallet(privateKey);
 
+  console.log('Preparing chain providers');
+  const multiProvider = new MultiProvider(
+    objMap(multiProviderConfig, (_chain, conf) => ({
+      ...conf,
+      signer: signer.connect(conf.provider),
+    })),
+  );
+
+  console.log('Starting deployments');
+  const deployer = new HypERC20Deployer(multiProvider, tokenConfigs, undefined);
   await deployer.deploy();
+
+  console.log('Deployments successful. Deployed contracts:');
+  // @ts-ignore
+  console.log(serializeContracts(deployer.deployedContracts));
 }
 
-deployNFTWrapper().then(console.log).catch(console.error);
+deployWarpRoute()
+  .then(() => console.log('Warp Route deployment done'))
+  .catch((e) => console.error('Warp Route deployment error:', e));
