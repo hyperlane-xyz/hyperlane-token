@@ -41,10 +41,10 @@ contract HypNative is TokenRouter {
         uint32 _destination,
         bytes32 _recipient,
         uint256 _amount
-    ) external payable override {
-        require(msg.value >= _amount, "msg.value < amount");
+    ) external payable override returns (bytes32 messageId) {
+        require(msg.value >= _amount, "Native: amount exceeds msg.value");
         uint256 gasPayment = msg.value - _amount;
-        _dispatchWithGas(
+        messageId = _dispatchWithGas(
             _destination,
             Message.format(_recipient, _amount, ""),
             gasAmount,

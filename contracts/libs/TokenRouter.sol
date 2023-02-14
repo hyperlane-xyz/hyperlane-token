@@ -53,14 +53,15 @@ abstract contract TokenRouter is Router {
      * @param _destination The identifier of the destination chain.
      * @param _recipient The address of the recipient on the destination chain.
      * @param _amountOrId The amount or identifier of tokens to be sent to the remote recipient.
+     * @return messageId The identifier of the dispatched message.
      */
     function transferRemote(
         uint32 _destination,
         bytes32 _recipient,
         uint256 _amountOrId
-    ) external payable virtual {
+    ) external payable virtual returns (bytes32 messageId) {
         bytes memory metadata = _transferFromSender(_amountOrId);
-        _dispatchWithGas(
+        messageId = _dispatchWithGas(
             _destination,
             Message.format(_recipient, _amountOrId, metadata),
             gasAmount,
