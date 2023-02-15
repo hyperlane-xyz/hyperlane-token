@@ -190,7 +190,6 @@ for (const withCollateral of [true, false]) {
       });
 
       it('should allow for remote transfers', async () => {
-        const gas = await local.destinationGas(remoteDomain);
         await local.transferRemote(
           remoteDomain,
           utils.addressToBytes32(recipient.address),
