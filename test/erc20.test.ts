@@ -171,10 +171,7 @@ for (const variant of [
       }
       const message = `${utils.addressToBytes32(
         recipient.address,
-      )}${BigNumber.from(amount)
-        .toHexString()
-        .slice(2)
-        .padStart(64, '0')}`;
+      )}${BigNumber.from(amount).toHexString().slice(2).padStart(64, '0')}`;
       const handleGas = await localRaw.estimateGas.handle(
         remoteDomain,
         utils.addressToBytes32(remote.address),
@@ -190,7 +187,6 @@ for (const variant of [
       const remoteOwner = await remote.balanceOf(owner.address);
       const remoteRecipient = await remote.balanceOf(recipient.address);
 
-      
       await local.transferRemote(
         remoteDomain,
         utils.addressToBytes32(recipient.address),
