@@ -61,6 +61,7 @@ for (const variant of [
     let localTokenConfig: TokenConfig = tokenConfig;
     let local: HypERC20 | HypERC20Collateral | HypNative;
     let remote: HypERC20 | HypERC20Collateral;
+    let gas: BigNumber;
 
     beforeEach(async () => {
       [owner, recipient] = await ethers.getSigners();
@@ -100,6 +101,12 @@ for (const variant of [
       deployer = new HypERC20Deployer(multiProvider, config, core);
       contracts = await deployer.deploy();
       local = contracts[localChain].router as HypERC20;
+
+      gas = await local.quoteGasPayment(remoteDomain);
+
+      if (variant === TokenType.native) {
+        gas = gas.add(amount);
+      }
 
       if (variant === TokenType.collateral) {
         await erc20!.approve(local.address, amount);
@@ -154,29 +161,27 @@ for (const variant of [
         await token.transfer(local.address, totalSupply);
       } else if (variant === TokenType.native) {
         const remoteDomain = ChainNameToDomainId[remoteChain];
-        const value = (await local.destinationGas(remoteDomain)).add(
-          totalSupply,
-        );
+        // deposit amount
         await local.transferRemote(
           remoteDomain,
           utils.addressToBytes32(remote.address),
-          totalSupply,
-          { value },
+          amount,
+          { value: gas },
         );
       }
       const message = `${utils.addressToBytes32(
         recipient.address,
-      )}${BigNumber.from(totalSupply)
+      )}${BigNumber.from(amount)
         .toHexString()
         .slice(2)
         .padStart(64, '0')}`;
-      const gas = await localRaw.estimateGas.handle(
+      const handleGas = await localRaw.estimateGas.handle(
         remoteDomain,
         utils.addressToBytes32(remote.address),
         message,
         { from: mailboxAddress },
       );
-      console.log(gas);
+      console.log(handleGas);
     });
 
     it('should allow for remote transfers', async () => {
@@ -185,15 +190,13 @@ for (const variant of [
       const remoteOwner = await remote.balanceOf(owner.address);
       const remoteRecipient = await remote.balanceOf(recipient.address);
 
-      const interchainGasPayment = await local.quoteGasPayment(remoteDomain);
+      
       await local.transferRemote(
         remoteDomain,
         utils.addressToBytes32(recipient.address),
         amount,
         {
-          value: interchainGasPayment.add(
-            variant === TokenType.native ? amount : 0,
-          ),
+          value: gas,
         },
       );
 
@@ -223,7 +226,6 @@ for (const variant of [
     it('allows interchain gas payment for remote transfers', async () => {
       const interchainGasPaymaster =
         core.contractsMap[localChain].interchainGasPaymaster.contract;
-      const gas = await local.destinationGas(remoteDomain);
 
       await expect(
         local.transferRemote(
@@ -247,6 +249,7 @@ for (const variant of [
         }
         return '';
       };
+      const value = variant === TokenType.native ? amount - 1 : gas;
       await expect(
         local
           .connect(recipient)
@@ -254,7 +257,7 @@ for (const variant of [
             remoteDomain,
             utils.addressToBytes32(recipient.address),
             amount,
-            { value: await local.destinationGas(remoteDomain) },
+            { value },
           ),
       ).to.be.revertedWith(revertReason());
     });
@@ -265,7 +268,7 @@ for (const variant of [
           remoteDomain,
           utils.addressToBytes32(recipient.address),
           amount,
-          { value: await local.destinationGas(remoteDomain) },
+          { value: gas },
         ),
       )
         .to.emit(local, 'SentTransferRemote')
