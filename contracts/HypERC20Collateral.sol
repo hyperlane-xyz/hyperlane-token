@@ -24,6 +24,10 @@ contract HypERC20Collateral is TokenRouter {
         wrappedToken = IERC20(erc20);
     }
 
+    function balanceOf(address _account) external view returns (uint256) {
+        return wrappedToken.balanceOf(_account);
+    }
+
     /**
      * @notice Initializes the Hyperlane router.
      * @param _mailbox The address of the mailbox contract.
