@@ -12,12 +12,6 @@ import {Address} from "@openzeppelin/contracts/utils/Address.sol";
  */
 contract HypNative is TokenRouter {
     /**
-     * @notice Constructor
-     * @param gasAmount Amount of destination gas to be paid for processing
-     */
-    constructor(uint256 gasAmount) TokenRouter(gasAmount) {}
-
-    /**
      * @notice Initializes the Hyperlane router, ERC20 metadata, and mints initial supply to deployer.
      * @param _mailbox The address of the mailbox contract.
      * @param _interchainGasPaymaster The address of the interchain gas paymaster contract.
@@ -47,7 +41,6 @@ contract HypNative is TokenRouter {
         messageId = _dispatchWithGas(
             _destination,
             Message.format(_recipient, _amount, ""),
-            gasAmount,
             gasPayment,
             msg.sender
         );
