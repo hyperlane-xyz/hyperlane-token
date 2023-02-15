@@ -68,10 +68,6 @@ contract HypERC721Collateral is TokenRouter {
         uint256 _tokenId,
         bytes calldata // no metadata
     ) internal override {
-        wrappedToken.safeTransferFrom(
-            address(this),
-            _recipient,
-            _tokenId
-        );
+        wrappedToken.safeTransferFrom(address(this), _recipient, _tokenId);
     }
 }

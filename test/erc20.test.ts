@@ -2,6 +2,7 @@ import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/signers';
 import '@nomiclabs/hardhat-waffle';
 import { expect } from 'chai';
 import { BigNumber } from 'ethers';
+import { BigNumberish } from 'ethers';
 import { ethers } from 'hardhat';
 
 import {
@@ -31,7 +32,6 @@ import {
   HypERC20Collateral,
   HypNative,
 } from '../src/types';
-import { BigNumberish } from 'ethers';
 
 const localChain = 'test1';
 const remoteChain = 'test2';
@@ -47,7 +47,11 @@ const tokenConfig: SyntheticConfig = {
   totalSupply,
 };
 
-for (const variant of [TokenType.synthetic, TokenType.collateral, TokenType.native]) {
+for (const variant of [
+  TokenType.synthetic,
+  TokenType.collateral,
+  TokenType.native,
+]) {
   describe(`HypERC20${variant}`, async () => {
     let owner: SignerWithAddress;
     let recipient: SignerWithAddress;
@@ -81,14 +85,17 @@ for (const variant of [TokenType.synthetic, TokenType.collateral, TokenType.nati
       } else if (variant === TokenType.native) {
         localTokenConfig = {
           type: variant,
-        }
+        };
       }
 
-      const config: ChainMap<TestChainNames, HypERC20Config> = objMap(coreConfig, (key) => ({
-        ...coreConfig[key],
-        ...(key === localChain ? localTokenConfig : tokenConfig),
-        owner: owner.address,
-      }));
+      const config: ChainMap<TestChainNames, HypERC20Config> = objMap(
+        coreConfig,
+        (key) => ({
+          ...coreConfig[key],
+          ...(key === localChain ? localTokenConfig : tokenConfig),
+          owner: owner.address,
+        }),
+      );
 
       deployer = new HypERC20Deployer(multiProvider, config, core);
       contracts = await deployer.deploy();
@@ -102,18 +109,19 @@ for (const variant of [TokenType.synthetic, TokenType.collateral, TokenType.nati
     });
 
     it('should not be initializable again', async () => {
-      const initializeTx = (variant === TokenType.collateral || variant === TokenType.native)
-        ? (local as HypERC20Collateral).initialize(
-            ethers.constants.AddressZero,
-            ethers.constants.AddressZero,
-          )
-        : (local as HypERC20).initialize(
-            ethers.constants.AddressZero,
-            ethers.constants.AddressZero,
-            0,
-            '',
-            '',
-          );
+      const initializeTx =
+        variant === TokenType.collateral || variant === TokenType.native
+          ? (local as HypERC20Collateral).initialize(
+              ethers.constants.AddressZero,
+              ethers.constants.AddressZero,
+            )
+          : (local as HypERC20).initialize(
+              ethers.constants.AddressZero,
+              ethers.constants.AddressZero,
+              0,
+              '',
+              '',
+            );
       await expect(initializeTx).to.be.revertedWith(
         'Initializable: contract is already initialized',
       );
@@ -146,8 +154,15 @@ for (const variant of [TokenType.synthetic, TokenType.collateral, TokenType.nati
         await token.transfer(local.address, totalSupply);
       } else if (variant === TokenType.native) {
         const remoteDomain = ChainNameToDomainId[remoteChain];
-        const value = (await local.destinationGas(remoteDomain)).add(totalSupply);
-        await local.transferRemote(remoteDomain, utils.addressToBytes32(remote.address), totalSupply, {value});
+        const value = (await local.destinationGas(remoteDomain)).add(
+          totalSupply,
+        );
+        await local.transferRemote(
+          remoteDomain,
+          utils.addressToBytes32(remote.address),
+          totalSupply,
+          { value },
+        );
       }
       const message = `${utils.addressToBytes32(
         recipient.address,
@@ -170,20 +185,23 @@ for (const variant of [TokenType.synthetic, TokenType.collateral, TokenType.nati
       const remoteOwner = await remote.balanceOf(owner.address);
       const remoteRecipient = await remote.balanceOf(recipient.address);
 
-      const interchainGasPayment = await local.quoteGasPayment(
-        remoteDomain
-      );
+      const interchainGasPayment = await local.quoteGasPayment(remoteDomain);
       await local.transferRemote(
         remoteDomain,
         utils.addressToBytes32(recipient.address),
         amount,
-        { value: interchainGasPayment.add((variant === TokenType.native) ? amount : 0) },
+        {
+          value: interchainGasPayment.add(
+            variant === TokenType.native ? amount : 0,
+          ),
+        },
       );
 
       let expectedLocal = localOwner.sub(amount);
 
       await expectBalance(local, recipient, localRecipient);
-      if (variant === TokenType.native) { // account for tx fees, rewards, etc.
+      if (variant === TokenType.native) {
+        // account for tx fees, rewards, etc.
         expectedLocal = await local.balanceOf(owner.address);
       }
       await expectBalance(local, owner, expectedLocal);
@@ -193,7 +211,8 @@ for (const variant of [TokenType.synthetic, TokenType.collateral, TokenType.nati
       await core.processMessages();
 
       await expectBalance(local, recipient, localRecipient);
-      if (variant === TokenType.native) { // account for tx fees, rewards, etc.
+      if (variant === TokenType.native) {
+        // account for tx fees, rewards, etc.
         expectedLocal = await local.balanceOf(owner.address);
       }
       await expectBalance(local, owner, expectedLocal);
@@ -205,7 +224,7 @@ for (const variant of [TokenType.synthetic, TokenType.collateral, TokenType.nati
       const interchainGasPaymaster =
         core.contractsMap[localChain].interchainGasPaymaster.contract;
       const gas = await local.destinationGas(remoteDomain);
-      
+
       await expect(
         local.transferRemote(
           remoteDomain,
@@ -227,7 +246,7 @@ for (const variant of [TokenType.synthetic, TokenType.collateral, TokenType.nati
             return 'Native: amount exceeds msg.value';
         }
         return '';
-      }
+      };
       await expect(
         local
           .connect(recipient)
