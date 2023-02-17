@@ -6,11 +6,10 @@ import { ethers } from 'hardhat';
 
 import {
   ChainMap,
-  ChainNameToDomainId,
-  TestChainNames,
+  Chains,
+  MultiProvider,
   TestCoreApp,
   TestCoreDeployer,
-  getTestMultiProvider,
   objMap,
 } from '@hyperlane-xyz/sdk';
 import { utils } from '@hyperlane-xyz/utils';
@@ -31,10 +30,10 @@ import {
   HypERC20Collateral,
 } from '../src/types';
 
-const localChain = 'test1';
-const remoteChain = 'test2';
-const localDomain = ChainNameToDomainId[localChain];
-const remoteDomain = ChainNameToDomainId[remoteChain];
+const localChain = Chains.test1;
+const remoteChain = Chains.test2;
+let localDomain: number;
+let remoteDomain: number;
 const totalSupply = 3000;
 const amount = 10;
 const testInterchainGasPayment = 123456789;
@@ -51,21 +50,24 @@ for (const withCollateral of [true, false]) {
     let owner: SignerWithAddress;
     let recipient: SignerWithAddress;
     let core: TestCoreApp;
-    let deployer: HypERC20Deployer<TestChainNames>;
-    let contracts: Record<TestChainNames, HypERC20Contracts>;
+    let deployer: HypERC20Deployer;
+    let contracts: ChainMap<HypERC20Contracts>;
     let local: HypERC20 | HypERC20Collateral;
     let remote: HypERC20 | HypERC20Collateral;
 
     beforeEach(async () => {
       [owner, recipient] = await ethers.getSigners();
-      const multiProvider = getTestMultiProvider(owner);
+      const multiProvider = MultiProvider.createTestMultiProvider({
+        signer: owner,
+      });
+      localDomain = multiProvider.getDomainId(localChain);
+      remoteDomain = multiProvider.getDomainId(remoteChain);
 
       const coreDeployer = new TestCoreDeployer(multiProvider);
       const coreContractsMaps = await coreDeployer.deploy();
       core = new TestCoreApp(coreContractsMaps, multiProvider);
       const coreConfig = core.getConnectionClientConfigMap();
       const configWithTokenInfo: ChainMap<
-        TestChainNames,
         HypERC20Config | HypERC20CollateralConfig
       > = objMap(coreConfig, (key) => ({
         ...coreConfig[key],
