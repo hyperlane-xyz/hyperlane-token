@@ -1,7 +1,7 @@
 import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/signers';
 import '@nomiclabs/hardhat-waffle';
 import { expect } from 'chai';
-import { BigNumber } from 'ethers';
+import { BigNumber, BigNumberish } from 'ethers';
 import { ethers } from 'hardhat';
 
 import {
@@ -41,7 +41,6 @@ const tokenId = 10;
 const tokenId2 = 20;
 const tokenId3 = 30;
 const tokenId4 = 40;
-const testInterchainGasPayment = 123456789;
 const gas = 67628;
 
 for (const withCollateral of [true, false]) {
@@ -80,6 +79,7 @@ for (const withCollateral of [true, false]) {
       let contracts: ChainMap<HypERC721Contracts>;
       let local: HypERC721 | HypERC721Collateral | HypERC721URICollateral;
       let remote: HypERC721 | HypERC721Collateral | HypERC721URIStorage;
+      let gas: BigNumberish;
 
       beforeEach(async () => {
         [owner, recipient] = await ethers.getSigners();
@@ -130,6 +130,7 @@ for (const withCollateral of [true, false]) {
           await erc721!.approve(local.address, tokenId3);
           await erc721!.approve(local.address, tokenId4);
         }
+        gas = await local.destinationGas(remoteDomain);
 
         remote = contracts[remoteChain].router;
       });
@@ -297,7 +298,7 @@ for (const withCollateral of [true, false]) {
             utils.addressToBytes32(recipient.address),
             tokenId3,
             {
-              value: testInterchainGasPayment,
+              value: gas,
             },
           ),
         ).to.emit(interchainGasPaymaster, 'GasPayment');
@@ -327,15 +328,5 @@ const expectBalance = async (
   signer: SignerWithAddress,
   balance: number,
 ) => {
-  if (Object.keys(token.interface.functions).includes('wrappedToken()')) {
-    const wrappedToken = await (token as HypERC721Collateral).wrappedToken();
-    token = ERC721__factory.connect(wrappedToken, signer);
-  }
-  return expectTokenBalance(token as HypERC721, signer, balance);
+  expect(await token.balanceOf(signer.address)).to.eq(balance);
 };
-
-const expectTokenBalance = async (
-  token: ERC721,
-  signer: SignerWithAddress,
-  balance: number,
-) => expect(await token.balanceOf(signer.address)).to.eq(balance);
