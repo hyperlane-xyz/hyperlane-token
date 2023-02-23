@@ -1,14 +1,21 @@
 import {
-  ChainMap, ChainName, GasRouterConfig, GasRouterDeployer, MultiProvider,
-  objMap
+  ChainMap,
+  ChainName,
+  GasRouterConfig,
+  GasRouterDeployer,
+  MultiProvider,
+  objMap,
 } from '@hyperlane-xyz/sdk';
 import { DeployerOptions } from '@hyperlane-xyz/sdk/dist/deploy/HyperlaneDeployer';
 
 import {
-  HypERC20Config, HypERC721Config,
-  isCollateralConfig, isSyntheticConfig,
+  HypERC20Config,
+  HypERC721Config,
+  TokenConfig,
+  isCollateralConfig,
+  isNativeConfig,
+  isSyntheticConfig,
   isUriConfig,
-  TokenConfig
 } from './config';
 import { HypERC20Contracts, HypERC721Contracts } from './contracts';
 import {
@@ -17,9 +24,9 @@ import {
   HypERC721Collateral__factory,
   HypERC721URICollateral__factory,
   HypERC721URIStorage__factory,
-  HypERC721__factory
+  HypERC721__factory,
+  HypNative__factory,
 } from './types';
-
 
 enum TokenType {
   erc20 = 'erc20',
@@ -40,7 +47,7 @@ const gasDefaults = (config: TokenConfig, tokenType: TokenType) => {
           return 80_000;
       }
     default:
-    case TokenType.erc20: 
+    case TokenType.erc20:
       switch (config.type) {
         case 'synthetic':
           return 64_000;
@@ -51,24 +58,35 @@ const gasDefaults = (config: TokenConfig, tokenType: TokenType) => {
           return 68_000;
       }
   }
-}
+};
 
 export class HypERC20Deployer extends GasRouterDeployer<
   HypERC20Config & GasRouterConfig,
   HypERC20Contracts,
   any // RouterFactories doesn't work well when router has multiple types
 > {
-  constructor(multiProvider: MultiProvider<Chain>, configMap: ChainMap<Chain, HypERC20Config>, factories: any, options?: DeployerOptions) {
-    super(multiProvider, objMap(configMap, (_, config): HypERC20Config & GasRouterConfig => ({
-      ...config,
-      gas: config.gas ?? gasDefaults(config, TokenType.erc20)
-    } as HypERC20Config & GasRouterConfig)), factories, options);
+  constructor(
+    multiProvider: MultiProvider,
+    configMap: ChainMap<HypERC20Config>,
+    factories: any,
+    options?: DeployerOptions,
+  ) {
+    super(
+      multiProvider,
+      objMap(
+        configMap,
+        (_, config): HypERC20Config & GasRouterConfig =>
+          ({
+            ...config,
+            gas: config.gas ?? gasDefaults(config, TokenType.erc20),
+          } as HypERC20Config & GasRouterConfig),
+      ),
+      factories,
+      options,
+    );
   }
 
-  async deployContracts(
-    chain: ChainName,
-    config: HypERC20Config ,
-  ) {
+  async deployContracts(chain: ChainName, config: HypERC20Config) {
     if (isCollateralConfig(config)) {
       const router = await this.deployContractFromFactory(
         chain,
@@ -106,7 +124,8 @@ export class HypERC20Deployer extends GasRouterDeployer<
         'HypNative',
         [],
       );
-      await this.multiProvider.handleTx( chain,
+      await this.multiProvider.handleTx(
+        chain,
         router.initialize(config.mailbox, config.interchainGasPaymaster),
       );
       return { router };
@@ -121,17 +140,28 @@ export class HypERC721Deployer extends GasRouterDeployer<
   HypERC721Contracts,
   any
 > {
-  constructor(multiProvider: MultiProvider, configMap: ChainMap<HypERC721Config>, factories: any, options?: DeployerOptions) {
-    super(multiProvider, objMap(configMap, (_, config): HypERC721Config & GasRouterConfig => ({
-      ...config,
-      gas: config.gas ?? gasDefaults(config, TokenType.erc721)
-    } as HypERC721Config & GasRouterConfig)), factories, options);
+  constructor(
+    multiProvider: MultiProvider,
+    configMap: ChainMap<HypERC721Config>,
+    factories: any,
+    options?: DeployerOptions,
+  ) {
+    super(
+      multiProvider,
+      objMap(
+        configMap,
+        (_, config): HypERC721Config & GasRouterConfig =>
+          ({
+            ...config,
+            gas: config.gas ?? gasDefaults(config, TokenType.erc721),
+          } as HypERC721Config & GasRouterConfig),
+      ),
+      factories,
+      options,
+    );
   }
 
-  async deployContracts(
-    chain: ChainName,
-    config: HypERC721Config,
-  ) {
+  async deployContracts(chain: ChainName, config: HypERC721Config) {
     if (isCollateralConfig(config)) {
       const router = await this.deployContractFromFactory(
         chain,
@@ -141,7 +171,8 @@ export class HypERC721Deployer extends GasRouterDeployer<
         `HypERC721${isUriConfig(config) ? 'URI' : ''}Collateral`,
         [config.token],
       );
-      await this.multiProvider.handleTx(chain,
+      await this.multiProvider.handleTx(
+        chain,
         router.initialize(config.mailbox, config.interchainGasPaymaster),
       );
       return { router };
@@ -154,7 +185,8 @@ export class HypERC721Deployer extends GasRouterDeployer<
         `HypERC721${isUriConfig(config) ? 'URIStorage' : ''}`,
         [],
       );
-      await this.multiProvider.handleTx(chain
+      await this.multiProvider.handleTx(
+        chain,
         router.initialize(
           config.mailbox,
           config.interchainGasPaymaster,

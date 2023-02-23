@@ -84,7 +84,6 @@ for (const variant of [
         localTokenConfig = {
           type: variant,
           token: erc20.address,
-          gas: 67615,
         };
       } else if (variant === TokenType.native) {
         localTokenConfig = {
