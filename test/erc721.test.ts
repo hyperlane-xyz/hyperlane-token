@@ -41,7 +41,6 @@ const tokenId = 10;
 const tokenId2 = 20;
 const tokenId3 = 30;
 const tokenId4 = 40;
-const gas = 67628;
 
 for (const withCollateral of [true, false]) {
   for (const withUri of [true, false]) {
@@ -56,17 +55,14 @@ for (const withCollateral of [true, false]) {
       test1: {
         ...tokenConfig,
         totalSupply,
-        gas,
       },
       test2: {
         ...tokenConfig,
         totalSupply: 0,
-        gas,
       },
       test3: {
         ...tokenConfig,
         totalSupply: 0,
-        gas,
       },
     };
     describe(`HypERC721${withUri ? 'URI' : ''}${
@@ -99,7 +95,6 @@ for (const withCollateral of [true, false]) {
           ...coreConfig[key],
           ...configMap[key],
           owner: owner.address,
-          gas,
         }));
 
         let erc721: ERC721 | undefined;

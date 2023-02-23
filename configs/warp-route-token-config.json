@@ -1,7 +1,6 @@
 {
   "goerli": {
     "type": "collateral",
-    "gas": 68000,
     "token": "0xb4fbf271143f4fbf7b91a5ded31805e42b2208d6",
     "owner": "0x5bA371aeA18734Cb7195650aFdfCa4f9251aa513",
     "mailbox": "0xCC737a94FecaeC165AbCf12dED095BB13F037685",
@@ -9,7 +8,6 @@
   },
   "alfajores": {
     "type": "synthetic",
-    "gas": 64000,
     "name": "Weth",
     "symbol": "WETH",
     "totalSupply": 0,
@@ -19,7 +17,6 @@
   },
   "fuji": {
     "type": "synthetic",
-    "gas": 64000,
     "name": "Weth",
     "symbol": "WETH",
     "totalSupply": 0,
@@ -29,7 +26,6 @@
   },
   "moonbasealpha": {
     "type": "synthetic",
-    "gas": 64000,
     "name": "Weth",
     "symbol": "WETH",
     "totalSupply": 0,
