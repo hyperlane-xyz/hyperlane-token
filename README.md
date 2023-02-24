@@ -49,10 +49,7 @@ The Token Router contract comes in several flavors and a warp route can be compo
 
 ## Remote Transfer Lifecycle Diagrams
 
-To initiate a remote transfer, users call the `TokenRouter.transferRemote` function with the destination chain ID, recipient address, and transfer amount. 
-
-<details>
-<summary>Native Remote Transfer</summary>
+To initiate a remote transfer, users call the `TokenRouter.transferRemote` function with the destination chain ID, recipient address, and transfer amount. Depending on the flavor of TokenRouter on the source and destination chain, this flow looks slightly different.
 
 ### Transfer Alice's `amount` native ETH from Ethereum to Bob on Polygon
 
@@ -109,11 +106,6 @@ graph TB
     linkStyle 10 color:green;
 ```
 
-</details>
-
-
-<details>
-<summary>Collateral Remote Transfer</summary>
 
 ### Transfer Alice's ERC20 `amount` from Ethereum to Bob on Polygon
 
@@ -173,11 +165,6 @@ graph TB
     HYP_P -- "6. mint(Bob, amount)" --> Bob
     linkStyle 12 color:green;
 ```
-</details>
-
-
-<details>
-<summary>Synthetic Remote Transfer</summary>
 
 ### Transfer Alice's `amount` synthetic MATIC from Ethereum back to Bob as native MATIC on Polygon
 
