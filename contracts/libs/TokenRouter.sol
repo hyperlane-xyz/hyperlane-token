@@ -4,12 +4,13 @@ pragma solidity >=0.8.0;
 import {GasRouter} from "@hyperlane-xyz/core/contracts/GasRouter.sol";
 import {TypeCasts} from "@hyperlane-xyz/core/contracts/libs/TypeCasts.sol";
 import {Message} from "./Message.sol";
+import {IHypToken} from "../../interfaces/IHypToken.sol";
 
 /**
  * @title Hyperlane Token Router that extends Router with abstract token (ERC20/ERC721) remote transfer functionality.
  * @author Abacus Works
  */
-abstract contract TokenRouter is GasRouter {
+abstract contract TokenRouter is IHypToken, GasRouter {
     using TypeCasts for bytes32;
     using Message for bytes;
 
@@ -38,13 +39,9 @@ abstract contract TokenRouter is GasRouter {
     );
 
     /**
-     * @notice Transfers `_amountOrId` token to `_recipient` on `_destination` domain.
+     * @inheritdoc IHypToken
      * @dev Delegates transfer logic to `_transferFromSender` implementation.
      * @dev Emits `SentTransferRemote` event on the origin chain.
-     * @param _destination The identifier of the destination chain.
-     * @param _recipient The address of the recipient on the destination chain.
-     * @param _amountOrId The amount or identifier of tokens to be sent to the remote recipient.
-     * @return messageId The identifier of the dispatched message.
      */
     function transferRemote(
         uint32 _destination,
