@@ -20,20 +20,20 @@ A *warp route* is a collection of [`TokenRouter`](./contracts/libs/TokenRouter.s
 graph LR
     subgraph "Ethereum"
         HYP_E[TokenRouter]
-        style HYP_E fill:purple
+        style HYP_E fill:orange
         Mailbox_E[(Mailbox)]
     end
 
     subgraph "Polygon"
         HYP_P[TokenRouter]
-        style HYP_P fill:purple
+        style HYP_P fill:orange
         Mailbox_P[(Mailbox)]
     end
 
 
     subgraph "Gnosis"
         HYP_G[TokenRouter]
-        style HYP_G fill:purple
+        style HYP_G fill:orange
         Mailbox_G[(Mailbox)]
     end
 
@@ -75,7 +75,7 @@ graph TB
     subgraph "Ethereum"
         HYP_E[NativeTokenRouter]
         IGP_E[InterchainGasPaymaster]
-        style HYP_E fill:purple
+        style HYP_E fill:orange
         Mailbox_E[(Mailbox)]
     end
 
@@ -88,9 +88,9 @@ graph TB
     
     subgraph "Polygon"
         ISM_P[ISM]
-        style ISM_P fill:purple
+        style ISM_P fill:orange
         HYP_P[SyntheticTokenRouter]
-        style HYP_P fill:purple
+        style HYP_P fill:orange
         Mailbox_P[(Mailbox)]
     end
 
@@ -133,7 +133,7 @@ graph TB
         style Token_E fill:green
         HYP_E[CollateralTokenRouter]
         IGP_E[InterchainGasPaymaster]
-        style HYP_E fill:purple
+        style HYP_E fill:orange
         Mailbox_E[(Mailbox)]
     end
 
@@ -148,9 +148,9 @@ graph TB
     
     subgraph "Polygon"
         ISM_P[ISM]
-        style ISM_P fill:purple
+        style ISM_P fill:orange
         HYP_P[SyntheticRouter]
-        style HYP_P fill:purple
+        style HYP_P fill:orange
         Mailbox_P[(Mailbox)]
     end
 
@@ -190,7 +190,7 @@ graph TB
     subgraph "Ethereum"
         HYP_E[SyntheticTokenRouter]
         IGP_E[InterchainGasPaymaster]
-        style HYP_E fill:purple
+        style HYP_E fill:orange
         Mailbox_E[(Mailbox)]
     end
 
@@ -204,9 +204,9 @@ graph TB
     
     subgraph "Polygon"
         ISM_P[ISM]
-        style ISM_P fill:purple
+        style ISM_P fill:orange
         HYP_P[NativeTokenRouter]
-        style HYP_P fill:purple
+        style HYP_P fill:orange
         Mailbox_P[(Mailbox)]
     end
 
