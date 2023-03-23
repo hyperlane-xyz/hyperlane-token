@@ -42,7 +42,8 @@ const tokenConfig: SyntheticConfig = {
   type: TokenType.synthetic,
   name: 'HypERC20',
   symbol: 'HYP',
-  totalSupply,
+  decimals: 18,
+  totalSupply
 };
 
 for (const variant of [
@@ -77,9 +78,9 @@ for (const variant of [
       let erc20: ERC20 | undefined;
       if (variant === TokenType.collateral) {
         erc20 = await new ERC20Test__factory(owner).deploy(
-          tokenConfig.name,
-          tokenConfig.symbol,
-          tokenConfig.totalSupply,
+          tokenConfig.name!,
+          tokenConfig.symbol!,
+          tokenConfig.totalSupply!,
         );
         localTokenConfig = {
           type: variant,

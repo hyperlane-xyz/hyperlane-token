@@ -10,11 +10,23 @@ export enum TokenType {
   native = 'native',
 }
 
-export type SyntheticConfig = {
-  type: TokenType.synthetic | TokenType.syntheticUri;
+export type TokenMetadata = {
   name: string;
   symbol: string;
   totalSupply: ethers.BigNumberish;
+}
+
+export type ERC20Metadata = TokenMetadata & {
+  decimals: number;
+}
+
+export const isTokenMetadata = (metadata: any): metadata is TokenMetadata => 
+    metadata.name !== undefined && metadata.symbol !== undefined && metadata.totalSupply !== undefined;
+
+export const isErc20Metadata = (metadata: any): metadata is ERC20Metadata => metadata.decimals !== undefined && isTokenMetadata(metadata);
+
+export type SyntheticConfig = Partial<ERC20Metadata> & {
+  type: TokenType.synthetic | TokenType.syntheticUri;
 };
 export type CollateralConfig = {
   type: TokenType.collateral | TokenType.collateralUri;
