@@ -43,7 +43,7 @@ const tokenConfig: SyntheticConfig = {
   name: 'HypERC20',
   symbol: 'HYP',
   decimals: 18,
-  totalSupply
+  totalSupply,
 };
 
 for (const variant of [
