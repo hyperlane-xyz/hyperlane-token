@@ -1,14 +1,22 @@
 import { BigNumberish } from 'ethers';
 
-import { ChainName, GasRouterApp, RouterContracts } from '@hyperlane-xyz/sdk';
+import { ChainName, RouterApp } from '@hyperlane-xyz/sdk';
 import { types } from '@hyperlane-xyz/utils';
 
-import { HypERC20Contracts, HypERC721Contracts } from './contracts';
+import {
+  HypERC20Contracts,
+  HypERC721Contracts,
+  TokenContracts,
+} from './contracts';
 import { TokenRouter } from './types';
 
 class HyperlaneTokenApp<
-  Contracts extends RouterContracts<TokenRouter>,
-> extends GasRouterApp<Contracts> {
+  Contracts extends TokenContracts,
+> extends RouterApp<Contracts> {
+  router(contracts: TokenContracts): TokenRouter {
+    return contracts.router;
+  }
+
   async transfer(
     origin: ChainName,
     destination: ChainName,

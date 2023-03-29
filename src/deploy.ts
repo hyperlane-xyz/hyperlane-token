@@ -62,8 +62,7 @@ const gasDefaults = (config: TokenConfig, tokenType: TokenType) => {
 
 export class HypERC20Deployer extends GasRouterDeployer<
   HypERC20Config & GasRouterConfig,
-  HypERC20Contracts,
-  any // RouterFactories doesn't work well when router has multiple types
+  HypERC20Contracts
 > {
   constructor(
     multiProvider: MultiProvider,
@@ -84,6 +83,10 @@ export class HypERC20Deployer extends GasRouterDeployer<
       factories,
       options,
     );
+  }
+
+  router(contracts: HypERC20Contracts) {
+    return contracts.router;
   }
 
   async deployContracts(chain: ChainName, config: HypERC20Config) {
@@ -137,8 +140,7 @@ export class HypERC20Deployer extends GasRouterDeployer<
 // TODO: dedupe?
 export class HypERC721Deployer extends GasRouterDeployer<
   HypERC721Config & GasRouterConfig,
-  HypERC721Contracts,
-  any
+  HypERC721Contracts
 > {
   constructor(
     multiProvider: MultiProvider,
@@ -159,6 +161,10 @@ export class HypERC721Deployer extends GasRouterDeployer<
       factories,
       options,
     );
+  }
+
+  router(contracts: HypERC721Contracts) {
+    return contracts.router;
   }
 
   async deployContracts(chain: ChainName, config: HypERC721Config) {
