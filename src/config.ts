@@ -1,6 +1,6 @@
 import { ethers } from 'ethers';
 
-import { GasRouterConfig, RouterConfig } from '@hyperlane-xyz/sdk';
+import { GasRouterConfig } from '@hyperlane-xyz/sdk';
 
 export enum TokenType {
   synthetic = 'synthetic',
@@ -21,11 +21,11 @@ export type ERC20Metadata = TokenMetadata & {
 }
 
 export const isTokenMetadata = (metadata: any): metadata is TokenMetadata => 
-    metadata.name !== undefined && metadata.symbol !== undefined && metadata.totalSupply !== undefined;
+    metadata.name && metadata.symbol && metadata.totalSupply;
 
-export const isErc20Metadata = (metadata: any): metadata is ERC20Metadata => metadata.decimals !== undefined && isTokenMetadata(metadata);
+export const isErc20Metadata = (metadata: any): metadata is ERC20Metadata => metadata.decimals && isTokenMetadata(metadata);
 
-export type SyntheticConfig = Partial<ERC20Metadata> & {
+export type SyntheticConfig = TokenMetadata & {
   type: TokenType.synthetic | TokenType.syntheticUri;
 };
 export type CollateralConfig = {
@@ -56,19 +56,9 @@ export const isUriConfig = (config: TokenConfig) =>
   config.type === TokenType.syntheticUri ||
   config.type === TokenType.collateralUri;
 
-export type HypERC20Config = Partial<GasRouterConfig> &
-  RouterConfig &
-  TokenConfig;
-export type HypERC20CollateralConfig = Partial<GasRouterConfig> &
-  RouterConfig &
-  CollateralConfig;
-export type HypNativeConfig = Partial<GasRouterConfig> &
-  RouterConfig &
-  NativeConfig;
+export type HypERC20Config = GasRouterConfig & SyntheticConfig & ERC20Metadata;
+export type HypERC20CollateralConfig = GasRouterConfig & CollateralConfig;
+export type HypNativeConfig = GasRouterConfig & NativeConfig;
 
-export type HypERC721Config = Partial<GasRouterConfig> &
-  RouterConfig &
-  TokenConfig;
-export type HypERC721CollateralConfig = Partial<GasRouterConfig> &
-  RouterConfig &
-  CollateralConfig;
+export type HypERC721Config = GasRouterConfig & SyntheticConfig;
+export type HypERC721CollateralConfig = GasRouterConfig & CollateralConfig;
