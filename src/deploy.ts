@@ -1,13 +1,11 @@
+import { providers } from 'ethers';
+
 import {
   ChainMap,
   ChainName,
-  GasRouterConfig,
   GasRouterDeployer,
-  MultiProvider,
-  objMap,
+  HyperlaneContracts
 } from '@hyperlane-xyz/sdk';
-import { DeployerOptions } from '@hyperlane-xyz/sdk/dist/deploy/HyperlaneDeployer';
-import { objFilter } from '@hyperlane-xyz/sdk/dist/utils/objects';
 
 import {
   CollateralConfig,
@@ -17,22 +15,17 @@ import {
   HypERC721CollateralConfig,
   HypERC721Config,
   HypNativeConfig,
-  NativeConfig,
-  SyntheticConfig,
-  TokenConfig,
   TokenMetadata,
   isCollateralConfig,
   isErc20Metadata,
   isNativeConfig,
   isSyntheticConfig,
-  isTokenMetadata,
   isUriConfig,
 } from './config';
-import { HypERC20Contracts, HypERC721Contracts } from './contracts';
+import { HypERC20Factories, HypERC721Factories } from './contracts';
 import {
   ERC20__factory,
   ERC721EnumerableUpgradeable__factory,
-  ERC721__factory,
   HypERC20,
   HypERC20Collateral,
   HypERC20Collateral__factory,
@@ -45,47 +38,28 @@ import {
   HypERC721__factory,
   HypNative,
   HypNative__factory,
-  TokenRouter,
 } from './types';
-import { providers } from 'ethers';
-
-enum TokenType {
-  erc20 = 'erc20',
-  erc721 = 'erc721',
-}
-
-const gasDefaults = (config: TokenConfig, tokenType: TokenType) => {
-  switch (tokenType) {
-    case TokenType.erc721:
-      switch (config.type) {
-        case 'synthetic':
-          return 160_000;
-        case 'syntheticUri':
-          return 163_000;
-        case 'collateral':
-        case 'collateralUri':
-        default:
-          return 80_000;
-      }
-    default:
-    case TokenType.erc20:
-      switch (config.type) {
-        case 'synthetic':
-          return 64_000;
-        case 'native':
-          return 44_000;
-        case 'collateral':
-        default:
-          return 69_000;
-      }
-  }
-};
+import { isTokenMetadata } from './config';
 
 export class HypERC20Deployer extends GasRouterDeployer<
   HypERC20Config,
-  HypERC20Contracts,
-  any
+  HypERC20Factories
 > {
+  tokenMetadata: ERC20Metadata | undefined;
+
+  static async fetchMetadata(
+    provider: providers.Provider,
+    config: CollateralConfig,
+  ): Promise<ERC20Metadata> {
+    const erc20 = ERC20__factory.connect(config.token, provider);
+    const name = await erc20.name();
+    const symbol = await erc20.symbol();
+    const totalSupply = await erc20.totalSupply();
+    const decimals = await erc20.decimals();
+
+    return { name, symbol, totalSupply, decimals };
+  }
+
   protected async deployCollateral(
     chain: ChainName,
     config: HypERC20CollateralConfig,
@@ -123,24 +97,29 @@ export class HypERC20Deployer extends GasRouterDeployer<
   protected async deploySynthetic(
     chain: ChainName,
     config: HypERC20Config,
+    metadata: ERC20Metadata
   ): Promise<HypERC20> {
     const router = await this.deployContractFromFactory(
       chain,
       new HypERC20__factory(),
       'HypERC20',
-      [config.decimals],
+      [metadata.decimals],
     );
     await this.multiProvider.handleTx(
       chain,
       router.initialize(
         config.mailbox,
         config.interchainGasPaymaster,
-        config.totalSupply,
-        config.name,
-        config.symbol,
+        metadata.totalSupply,
+        metadata.name,
+        metadata.symbol,
       ),
     );
     return router;
+  }
+
+  router(contracts: HyperlaneContracts<HypERC20Factories>) {
+    return contracts.router;
   }
 
   async deployContracts(chain: ChainName, config: HypERC20Config) {
@@ -150,21 +129,72 @@ export class HypERC20Deployer extends GasRouterDeployer<
     } else if (isNativeConfig(config)) {
       router = await this.deployNative(chain, config);
     } else if (isSyntheticConfig(config)) {
-      router = await this.deploySynthetic(chain, config);
+      if (!isErc20Metadata(this.tokenMetadata)) {
+        throw new Error('Invalid synthetic token metadata');
+      }
+      router = await this.deploySynthetic(chain, config, this.tokenMetadata);
     } else {
       throw new Error('Invalid ERC20 token router config');
     }
     return { router };
   }
+
+  async buildTokenMetadata(configMap: ChainMap<HypERC20Config>): Promise<ERC20Metadata | undefined> {
+    let tokenMetadata: ERC20Metadata | undefined;
+
+    for (const [chain, config] of Object.entries(configMap)) {
+      if (isCollateralConfig(config)) {
+        const collateralMetadata = await HypERC20Deployer.fetchMetadata(
+          this.multiProvider.getProvider(chain),
+          config,
+        );
+        tokenMetadata = {
+          ...collateralMetadata,
+          totalSupply: 0,
+        }
+      } else if (isNativeConfig(config)) {
+        const chainMetadata = this.multiProvider.getChainMetadata(chain);
+        if (chainMetadata.nativeToken) {
+          tokenMetadata = {
+            totalSupply: 0,
+            ...chainMetadata.nativeToken,
+          };
+        }
+      } else if (isErc20Metadata(config)) {
+        tokenMetadata = config;
+      }
+    }
+
+    return tokenMetadata;
+  }
+
+  async deploy(configMap: ChainMap<HypERC20Config>) {
+    this.tokenMetadata = await this.buildTokenMetadata(configMap);
+
+    if (!this.tokenMetadata) {
+      throw new Error('No ERC20 token metadata found');
+    } else {
+      this.logger('Found synthetic token metadata:', this.tokenMetadata);
+    }
+
+    return super.deploy(configMap);
+  }
 }
 
 export class HypERC721Deployer extends GasRouterDeployer<
   HypERC721Config,
-  HypERC721Contracts,
-  any
+  HypERC721Factories
 > {
-  static async fetchMetadata(provider: providers.Provider, config: CollateralConfig): Promise<TokenMetadata> {
-    const erc721 = ERC721EnumerableUpgradeable__factory.connect(config.token, provider);
+  tokenMetadata: TokenMetadata | undefined;
+
+  static async fetchMetadata(
+    provider: providers.Provider,
+    config: CollateralConfig,
+  ): Promise<TokenMetadata> {
+    const erc721 = ERC721EnumerableUpgradeable__factory.connect(
+      config.token,
+      provider,
+    );
     const name = await erc721.name();
     const symbol = await erc721.symbol();
     const totalSupply = await erc721.totalSupply();
@@ -200,7 +230,8 @@ export class HypERC721Deployer extends GasRouterDeployer<
 
   protected async deploySynthetic(
     chain: ChainName,
-    config: HypERC721Config
+    config: HypERC721Config,
+    metadata: TokenMetadata,
   ): Promise<HypERC721> {
     let router: HypERC721;
     if (isUriConfig(config)) {
@@ -223,12 +254,16 @@ export class HypERC721Deployer extends GasRouterDeployer<
       router.initialize(
         config.mailbox,
         config.interchainGasPaymaster,
-        config.totalSupply,
-        config.name,
-        config.symbol,
+        metadata.totalSupply,
+        metadata.name,
+        metadata.symbol,
       ),
     );
     return router;
+  }
+
+  router(contracts: HyperlaneContracts<HypERC721Factories>) {
+    return contracts.router;
   }
 
   async deployContracts(chain: ChainName, config: HypERC721Config) {
@@ -236,10 +271,46 @@ export class HypERC721Deployer extends GasRouterDeployer<
     if (isCollateralConfig(config)) {
       router = await this.deployCollateral(chain, config);
     } else if (isSyntheticConfig(config)) {
-      router = await this.deploySynthetic(chain, config);
+      if (!isTokenMetadata(this.tokenMetadata)) {
+        throw new Error('Invalid synthetic token metadata');
+      }
+      router = await this.deploySynthetic(chain, config, this.tokenMetadata);
     } else {
       throw new Error('Invalid ERC721 token router config');
     }
     return { router };
+  }
+
+  async buildTokenMetadata(configMap: ChainMap<HypERC20Config>): Promise<TokenMetadata | undefined> {
+    let tokenMetadata: TokenMetadata | undefined;
+
+    for (const [chain, config] of Object.entries(configMap)) {
+      if (isCollateralConfig(config)) {
+        const collateralMetadata = await HypERC20Deployer.fetchMetadata(
+          this.multiProvider.getProvider(chain),
+          config,
+        );
+        tokenMetadata = {
+          ...collateralMetadata,
+          totalSupply: 0,
+        }
+      } else if (isTokenMetadata(config)) {
+        tokenMetadata = config;
+      }
+    }
+
+    return tokenMetadata;
+  }
+
+  async deploy(configMap: ChainMap<HypERC721Config>) {
+    this.tokenMetadata = await this.buildTokenMetadata(configMap);
+  
+    if (!this.tokenMetadata) {
+      throw new Error('No ERC20 token metadata found');
+    } else {
+      this.logger('Found synthetic token metadata:', this.tokenMetadata);
+    }
+
+    return super.deploy(configMap);
   }
 }
