@@ -4,13 +4,15 @@ import { expect } from 'chai';
 import { BigNumber, BigNumberish } from 'ethers';
 import { ethers } from 'hardhat';
 
+import { InterchainGasPaymaster__factory } from '@hyperlane-xyz/core';
 import {
   ChainMap,
-  ChainNameToDomainId,
-  TestChainNames,
+  Chains,
+  HyperlaneContractsMap,
+  MultiProvider,
   TestCoreApp,
   TestCoreDeployer,
-  getTestMultiProvider,
+  deployTestIgpsAndGetRouterConfig,
   objMap,
 } from '@hyperlane-xyz/sdk';
 import { utils } from '@hyperlane-xyz/utils';
@@ -21,7 +23,7 @@ import {
   SyntheticConfig,
   TokenType,
 } from '../src/config';
-import { HypERC721Contracts } from '../src/contracts';
+import { HypERC721Factories } from '../src/contracts';
 import { HypERC721Deployer } from '../src/deploy';
 import {
   ERC721,
@@ -33,10 +35,10 @@ import {
   HypERC721URIStorage,
 } from '../src/types';
 
-const localChain = 'test1';
-const remoteChain = 'test2';
-const localDomain = ChainNameToDomainId[localChain];
-const remoteDomain = ChainNameToDomainId[remoteChain];
+const localChain = Chains.test1;
+const remoteChain = Chains.test2;
+let localDomain: number;
+let remoteDomain: number;
 const totalSupply = 50;
 const tokenId = 10;
 const tokenId2 = 20;
@@ -72,22 +74,29 @@ for (const withCollateral of [true, false]) {
       let owner: SignerWithAddress;
       let recipient: SignerWithAddress;
       let core: TestCoreApp;
-      let deployer: HypERC721Deployer<TestChainNames>;
-      let contracts: Record<TestChainNames, HypERC721Contracts>;
+      let deployer: HypERC721Deployer;
+      let contracts: HyperlaneContractsMap<HypERC721Factories>;
       let local: HypERC721 | HypERC721Collateral | HypERC721URICollateral;
       let remote: HypERC721 | HypERC721Collateral | HypERC721URIStorage;
-      let gas: BigNumberish;
+      let interchainGasPayment: BigNumberish;
 
       beforeEach(async () => {
         [owner, recipient] = await ethers.getSigners();
-        const multiProvider = getTestMultiProvider(owner);
+        const multiProvider = MultiProvider.createTestMultiProvider({
+          signer: owner,
+        });
+        localDomain = multiProvider.getDomainId(localChain);
+        remoteDomain = multiProvider.getDomainId(remoteChain);
 
         const coreDeployer = new TestCoreDeployer(multiProvider);
         const coreContractsMaps = await coreDeployer.deploy();
         core = new TestCoreApp(coreContractsMaps, multiProvider);
-        const coreConfig = core.getConnectionClientConfigMap();
+        const coreConfig = await deployTestIgpsAndGetRouterConfig(
+          multiProvider,
+          owner.address,
+          core.contractsMap,
+        );
         const configWithTokenInfo: ChainMap<
-          TestChainNames,
           HypERC721Config | HypERC721CollateralConfig
         > = objMap(coreConfig, (key) => ({
           ...coreConfig[key],
@@ -123,7 +132,7 @@ for (const withCollateral of [true, false]) {
           await erc721!.approve(local.address, tokenId3);
           await erc721!.approve(local.address, tokenId4);
         }
-        gas = await local.destinationGas(remoteDomain);
+        interchainGasPayment = await local.quoteGasPayment(remoteDomain);
 
         remote = contracts[remoteChain].router;
       });
@@ -184,7 +193,7 @@ for (const withCollateral of [true, false]) {
             remoteDomain,
             utils.addressToBytes32(recipient.address),
             invalidTokenId,
-            { value: gas },
+            { value: interchainGasPayment },
           ),
         ).to.be.revertedWith('ERC721: invalid token ID');
       });
@@ -194,7 +203,7 @@ for (const withCollateral of [true, false]) {
           remoteDomain,
           utils.addressToBytes32(recipient.address),
           tokenId2,
-          { value: gas },
+          { value: interchainGasPayment },
         );
 
         await expectBalance(local, recipient, 0);
@@ -219,7 +228,7 @@ for (const withCollateral of [true, false]) {
             remoteDomain,
             utils.addressToBytes32(recipient.address),
             tokenId2,
-            { value: gas },
+            { value: interchainGasPayment },
           );
 
           await expect(remoteUri.tokenURI(tokenId2)).to.be.revertedWith('');
@@ -243,15 +252,14 @@ for (const withCollateral of [true, false]) {
               remoteDomain,
               utils.addressToBytes32(recipient.address),
               tokenId2,
-              { value: gas },
+              { value: interchainGasPayment },
             ),
         ).to.be.revertedWith(revertReason);
       });
 
       it('benchmark handle gas overhead', async () => {
         const localRaw = local.connect(ethers.provider);
-        const mailboxAddress =
-          core.contractsMap[localChain].mailbox.contract.address;
+        const mailboxAddress = core.contractsMap[localChain].mailbox.address;
         let tokenIdToUse: number;
         if (withCollateral) {
           const tokenAddress = await (
@@ -283,15 +291,16 @@ for (const withCollateral of [true, false]) {
       });
 
       it('allows interchain gas payment for remote transfers', async () => {
-        const interchainGasPaymaster =
-          core.contractsMap[localChain].interchainGasPaymaster.contract;
+        const interchainGasPaymaster = new InterchainGasPaymaster__factory()
+          .attach(await local.interchainGasPaymaster())
+          .connect(owner);
         await expect(
           local.transferRemote(
             remoteDomain,
             utils.addressToBytes32(recipient.address),
             tokenId3,
             {
-              value: gas,
+              value: interchainGasPayment,
             },
           ),
         ).to.emit(interchainGasPaymaster, 'GasPayment');
@@ -303,7 +312,7 @@ for (const withCollateral of [true, false]) {
             remoteDomain,
             utils.addressToBytes32(recipient.address),
             tokenId4,
-            { value: gas },
+            { value: interchainGasPayment },
           ),
         )
           .to.emit(local, 'SentTransferRemote')
