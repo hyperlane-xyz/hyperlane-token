@@ -59,7 +59,7 @@ To initiate a remote transfer, users call the `TokenRouter.transferRemote` funct
 interface TokenRouter {
   function transferRemote(
       uint32 destination,
-      bytes32 recipient,
+      address recipient,
       uint256 amount
   ) public returns (bytes32 messageId);
 }
