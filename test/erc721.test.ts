@@ -6,7 +6,6 @@ import { ethers } from 'hardhat';
 
 import { InterchainGasPaymaster__factory } from '@hyperlane-xyz/core';
 import {
-  ChainMap,
   Chains,
   HyperlaneContractsMap,
   MultiProvider,
@@ -18,9 +17,7 @@ import {
 import { utils } from '@hyperlane-xyz/utils';
 
 import {
-  HypERC721CollateralConfig,
-  HypERC721Config,
-  SyntheticConfig,
+  TokenConfig,
   TokenType,
 } from '../src/config';
 import { HypERC721Factories } from '../src/contracts';
@@ -45,20 +42,21 @@ const tokenId2 = 20;
 const tokenId3 = 30;
 const tokenId4 = 40;
 
+const tokenMetadata = {
+  name: 'HypERC721',
+  symbol: 'HYP',
+  totalSupply,
+};
+
 for (const withCollateral of [true, false]) {
   for (const withUri of [true, false]) {
-    const tokenConfig: SyntheticConfig = {
+    const tokenConfig: TokenConfig = {
       type: withUri ? TokenType.syntheticUri : TokenType.synthetic,
-      name: 'HypERC721',
-      symbol: 'HYP',
-      totalSupply,
+      ...tokenMetadata,
     };
 
     const configMap = {
-      test1: {
-        ...tokenConfig,
-        totalSupply,
-      },
+      test1: tokenConfig,
       test2: {
         ...tokenConfig,
         totalSupply: 0,
@@ -96,9 +94,7 @@ for (const withCollateral of [true, false]) {
           owner.address,
           core.contractsMap,
         );
-        const configWithTokenInfo: ChainMap<
-          HypERC721Config | HypERC721CollateralConfig
-        > = objMap(coreConfig, (key) => ({
+        const configWithTokenInfo = objMap(coreConfig, (key) => ({
           ...coreConfig[key],
           ...configMap[key],
           owner: owner.address,
@@ -107,23 +103,20 @@ for (const withCollateral of [true, false]) {
         let erc721: ERC721 | undefined;
         if (withCollateral) {
           erc721 = await new ERC721Test__factory(owner).deploy(
-            tokenConfig.name!,
-            tokenConfig.symbol!,
-            tokenConfig.totalSupply!,
+            tokenConfig.name,
+            tokenConfig.symbol,
+            tokenConfig.totalSupply,
           );
           configWithTokenInfo.test1 = {
-            ...configWithTokenInfo.test1,
             type: withUri ? TokenType.collateralUri : TokenType.collateral,
             token: erc721.address,
+            ...coreConfig.test1,
           };
         }
 
-        deployer = new HypERC721Deployer(
-          multiProvider,
-          configWithTokenInfo,
-          core,
-        );
-        contracts = await deployer.deploy();
+        deployer = new HypERC721Deployer(multiProvider);
+        contracts = await deployer.deploy(configWithTokenInfo);
+
         local = contracts[localChain].router;
         if (withCollateral) {
           // approve wrapper to transfer tokens

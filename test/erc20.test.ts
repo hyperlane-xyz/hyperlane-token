@@ -10,6 +10,7 @@ import {
   Chains,
   HyperlaneContractsMap,
   MultiProvider,
+  RouterConfig,
   TestCoreApp,
   TestCoreDeployer,
   deployTestIgpsAndGetRouterConfig,
@@ -18,8 +19,6 @@ import {
 import { utils } from '@hyperlane-xyz/utils';
 
 import {
-  HypERC20Config,
-  SyntheticConfig,
   TokenConfig,
   TokenType,
 } from '../src/config';
@@ -41,8 +40,7 @@ let remoteDomain: number;
 const totalSupply = 3000;
 const amount = 10;
 
-const tokenConfig: SyntheticConfig = {
-  type: TokenType.synthetic,
+const tokenMetadata = {
   name: 'HypERC20',
   symbol: 'HYP',
   decimals: 18,
@@ -60,9 +58,9 @@ for (const variant of [
     let core: TestCoreApp;
     let deployer: HypERC20Deployer;
     let contracts: HyperlaneContractsMap<HypERC20Factories>;
-    let localTokenConfig: TokenConfig = tokenConfig;
+    let localTokenConfig: TokenConfig;
     let local: HypERC20 | HypERC20Collateral | HypNative;
-    let remote: HypERC20 | HypERC20Collateral;
+    let remote: HypERC20;
     let interchainGasPayment: BigNumber;
 
     beforeEach(async () => {
@@ -76,7 +74,7 @@ for (const variant of [
       const coreDeployer = new TestCoreDeployer(multiProvider);
       const coreContractsMaps = await coreDeployer.deploy();
       core = new TestCoreApp(coreContractsMaps, multiProvider);
-      const coreConfig = await deployTestIgpsAndGetRouterConfig(
+      const routerConfig = await deployTestIgpsAndGetRouterConfig(
         multiProvider,
         owner.address,
         core.contractsMap,
@@ -85,9 +83,9 @@ for (const variant of [
       let erc20: ERC20 | undefined;
       if (variant === TokenType.collateral) {
         erc20 = await new ERC20Test__factory(owner).deploy(
-          tokenConfig.name!,
-          tokenConfig.symbol!,
-          tokenConfig.totalSupply!,
+          tokenMetadata.name,
+          tokenMetadata.symbol,
+          tokenMetadata.totalSupply,
         );
         localTokenConfig = {
           type: variant,
@@ -97,17 +95,21 @@ for (const variant of [
         localTokenConfig = {
           type: variant,
         };
+      } else if (variant === TokenType.synthetic) {
+        localTokenConfig = { type: variant, ...tokenMetadata };
       }
 
-      const config: ChainMap<HypERC20Config> = objMap(coreConfig, (key) => ({
-        ...coreConfig[key],
-        ...(key === localChain ? localTokenConfig : tokenConfig),
+      const config = objMap(routerConfig, (key) => ({
+        ...routerConfig[key],
+        ...(key === localChain)
+          ? localTokenConfig
+          : { type: TokenType.synthetic },
         owner: owner.address,
-      }));
+      })) as ChainMap<TokenConfig & RouterConfig>;
 
-      deployer = new HypERC20Deployer(multiProvider, config, core);
-      contracts = await deployer.deploy();
-      local = contracts[localChain].router as HypERC20;
+      deployer = new HypERC20Deployer(multiProvider);
+      contracts = await deployer.deploy(config);
+      local = contracts[localChain].router;
 
       interchainGasPayment = await local.quoteGasPayment(remoteDomain);
 
