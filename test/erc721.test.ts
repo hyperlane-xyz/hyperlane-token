@@ -16,10 +16,7 @@ import {
 } from '@hyperlane-xyz/sdk';
 import { utils } from '@hyperlane-xyz/utils';
 
-import {
-  TokenConfig,
-  TokenType,
-} from '../src/config';
+import { TokenConfig, TokenType } from '../src/config';
 import { HypERC721Factories } from '../src/contracts';
 import { HypERC721Deployer } from '../src/deploy';
 import {

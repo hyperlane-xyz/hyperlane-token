@@ -18,10 +18,7 @@ import {
 } from '@hyperlane-xyz/sdk';
 import { utils } from '@hyperlane-xyz/utils';
 
-import {
-  TokenConfig,
-  TokenType,
-} from '../src/config';
+import { TokenConfig, TokenType } from '../src/config';
 import { HypERC20Factories } from '../src/contracts';
 import { HypERC20Deployer } from '../src/deploy';
 import {
@@ -101,9 +98,9 @@ for (const variant of [
 
       const config = objMap(routerConfig, (key) => ({
         ...routerConfig[key],
-        ...(key === localChain)
+        ...(key === localChain
           ? localTokenConfig
-          : { type: TokenType.synthetic },
+          : { type: TokenType.synthetic }),
         owner: owner.address,
       })) as ChainMap<TokenConfig & RouterConfig>;
 
