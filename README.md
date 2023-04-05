@@ -41,15 +41,33 @@ graph LR
 
 ```
 
-The Token Router contract comes in several flavors and a warp route can be composed as  a combination of these flavors.
+The Token Router contract comes in several flavors and a warp route can be composed of a combination of these flavors.
 
 - [`Native`](./contracts/HypNative.sol) - for warping native assets (e.g. ETH) from the canonical chain
 - [`Collateral`](./contracts/HypERC20Collateral.sol) - for warping tokens, ERC20 or ERC721, from the canonical chain
 - [`Synthetic`](./contracts/HypERC20.sol) - for representing tokens, Native/ERC20 or ERC721, on a non-canonical chain
 
+## Interchain Security Models
+
+Warp routes are unique amongst token bridging solutions because they provide modular security. Because the `TokenRouter` implements the `IMessageRecipient` interface, it can be configured with a custom interchain security module. Please refer to the relevant guide to specifying interchain security modules on the [Messaging API receive docs](https://docs.hyperlane.xyz/docs/apis/messaging-api/receive#interchain-security-modules).
+
 ## Remote Transfer Lifecycle Diagrams
 
-To initiate a remote transfer, users call the `TokenRouter.transferRemote` function with the destination chain ID, recipient address, and transfer amount. Depending on the flavor of TokenRouter on the source and destination chain, this flow looks slightly different.
+To initiate a remote transfer, users call the `TokenRouter.transferRemote` function with the `destination` chain ID, `recipient` address, and transfer `amount`. 
+
+```solidity
+interface TokenRouter {
+  function transferRemote(
+      uint32 destination,
+      bytes32 recipient,
+      uint256 amount
+  ) public returns (bytes32 messageId);
+}
+```
+
+**NOTE:** The [Relayer](https://docs.hyperlane.xyz/docs/protocol/agents/relayer) shown below must be compensated. Please refer to the relevant guide on [paying for interchain gas](https://docs.hyperlane.xyz/docs/build-with-hyperlane/guides/paying-for-interchain-gas) on the `messageID` returned from the `transferRemote` call.
+
+Depending on the flavor of TokenRouter on the source and destination chain, this flow looks slightly different. The following diagrams illustrate these differences.
 
 ### Transfer Alice's `amount` native ETH from Ethereum to Bob on Polygon
 
@@ -74,21 +92,15 @@ graph TB
 
     subgraph "Ethereum"
         HYP_E[NativeTokenRouter]
-        IGP_E[InterchainGasPaymaster]
         style HYP_E fill:orange
         Mailbox_E[(Mailbox)]
     end
 
-    Alice == "1. transferRemote(Polygon, Bob, 5)\n{value: amount + interchainGasPayment}" ==> HYP_E
+    Alice == "transferRemote(Polygon, Bob, amount)\n{value: amount}" ==> HYP_E
     linkStyle 0 color:green;
-    HYP_E -- "2. id = dispatch(Polygon, (Bob, amount))" --> Mailbox_E
-
-    HYP_E -- "3. payForGas(id)\n{value: interchainGasPayment}" --> IGP_E
-    IGP_E -. "paymaster" .- Relayer
+    HYP_E -- "dispatch(Polygon, (Bob, amount))" --> Mailbox_E
     
     subgraph "Polygon"
-        ISM_P[ISM]
-        style ISM_P fill:orange
         HYP_P[SyntheticTokenRouter]
         style HYP_P fill:orange
         Mailbox_P[(Mailbox)]
@@ -96,14 +108,13 @@ graph TB
 
     Mailbox_E -. "indexing" .-> Relayer
 
-    Relayer == "4. process(Ethereum, (Bob, amount))" ==> Mailbox_P
-    Mailbox_P -- "5. verify(Ethereum, (Bob, amount))" --> ISM_P
-    Mailbox_P -- "6. handle(Ethereum, (Bob, amount))" --> HYP_P
+    Relayer == "process(Ethereum, (Bob, amount))" ==> Mailbox_P
+    Mailbox_P -- "handle(Ethereum, (Bob, amount))" --> HYP_P
 
     HYP_E -. "router" .- HYP_P
-    ISM_P -. "interchainSecurityModule" .- HYP_P
-    HYP_P -- "7. mint(Bob, amount)" --> Bob
-    linkStyle 10 color:green;
+
+    HYP_P -- "mint(Bob, amount)" --> Bob
+    linkStyle 6 color:green;
 ```
 
 
@@ -132,23 +143,17 @@ graph TB
         Token_E[ERC20]
         style Token_E fill:green
         HYP_E[CollateralTokenRouter]
-        IGP_E[InterchainGasPaymaster]
         style HYP_E fill:orange
         Mailbox_E[(Mailbox)]
     end
 
-    Alice == "0. approve(CollateralTokenRouter, infinity)" ==> Token_E
-    Alice == "1. transferRemote(Polygon, Bob, amount)\n{value: interchainGasPayment}" ==> HYP_E
-    Token_E -- "2. transferFrom(Alice, amount)" --> HYP_E
+    Alice == "approve(CollateralTokenRouter, infinity)" ==> Token_E
+    Alice == "transferRemote(Polygon, Bob, amount)" ==> HYP_E
+    Token_E -- "transferFrom(Alice, amount)" --> HYP_E
     linkStyle 2 color:green;
-    HYP_E -- "3. id = dispatch(Polygon, (Bob, amount))" --> Mailbox_E
-
-    HYP_E -- "4. payForGas(id)\n{value: interchainGasPayment}" --> IGP_E
-    IGP_E -. "paymaster" .- Relayer
+    HYP_E -- "dispatch(Polygon, (Bob, amount))" --> Mailbox_E
     
     subgraph "Polygon"
-        ISM_P[ISM]
-        style ISM_P fill:orange
         HYP_P[SyntheticRouter]
         style HYP_P fill:orange
         Mailbox_P[(Mailbox)]
@@ -156,14 +161,12 @@ graph TB
 
     Mailbox_E -. "indexing" .-> Relayer
 
-    Relayer == "4. process(Ethereum, (Bob, amount))" ==> Mailbox_P
-    Mailbox_P -- "4. verify(Ethereum, (Bob, amount))" --> ISM_P
-    Mailbox_P -- "5. handle(Ethereum, (Bob, amount))" --> HYP_P
+    Relayer == "process(Ethereum, (Bob, amount))" ==> Mailbox_P
+    Mailbox_P -- "handle(Ethereum, (Bob, amount))" --> HYP_P
 
     HYP_E -. "router" .- HYP_P
-    ISM_P -. "interchainSecurityModule" .- HYP_P
-    HYP_P -- "6. mint(Bob, amount)" --> Bob
-    linkStyle 12 color:green;
+    HYP_P -- "mint(Bob, amount)" --> Bob
+    linkStyle 8 color:green;
 ```
 
 ### Transfer Alice's `amount` synthetic MATIC from Ethereum back to Bob as native MATIC on Polygon
@@ -189,22 +192,16 @@ graph TB
 
     subgraph "Ethereum"
         HYP_E[SyntheticTokenRouter]
-        IGP_E[InterchainGasPaymaster]
         style HYP_E fill:orange
         Mailbox_E[(Mailbox)]
     end
 
-    Alice == "1. transferRemote(Polygon, Bob, amount)\n{value: interchainGasPayment}" ==> HYP_E
-    Alice -- "2. burn(Alice, amount)" --> HYP_E
+    Alice == "transferRemote(Polygon, Bob, amount)" ==> HYP_E
+    Alice -- "burn(Alice, amount)" --> HYP_E
     linkStyle 1 color:green;
-    HYP_E -- "3. id = dispatch(Polygon, (Bob, amount))" --> Mailbox_E
-
-    HYP_E -- "4. payForGas(id)\n{value: interchainGasPayment}" --> IGP_E
-    IGP_E -. "paymaster" .- Relayer
+    HYP_E -- "dispatch(Polygon, (Bob, amount))" --> Mailbox_E
     
     subgraph "Polygon"
-        ISM_P[ISM]
-        style ISM_P fill:orange
         HYP_P[NativeTokenRouter]
         style HYP_P fill:orange
         Mailbox_P[(Mailbox)]
@@ -212,17 +209,13 @@ graph TB
 
     Mailbox_E -. "indexing" .-> Relayer
 
-    Relayer == "5. process(Ethereum, (Bob, amount))" ==> Mailbox_P
-    Mailbox_P -- "6. verify(Ethereum, (Bob, amount))" --> ISM_P
-    Mailbox_P -- "7. handle(Ethereum, (Bob, amount))" --> HYP_P
+    Relayer == "process(Ethereum, (Bob, amount))" ==> Mailbox_P
+    Mailbox_P -- "handle(Ethereum, (Bob, amount))" --> HYP_P
 
     HYP_E -. "router" .- HYP_P
-    ISM_P -. "interchainSecurityModule" .- HYP_P
-    HYP_P -- "8. transfer(){value: amount}" --> Bob
-    linkStyle 11 color:green;
+    HYP_P -- "transfer(){value: amount}" --> Bob
+    linkStyle 7 color:green;
 ```
-
-</details>
 
 ## Versions
 
@@ -230,6 +223,7 @@ graph TB
 | ------- | ------------ | ----- |
 | [audit-v2-remediation]() | 2023-02-15 | Hyperlane V2 Audit remediation |
 | [main]() | ~ | Bleeding edge |
+
 
 ## Setup for local development
 
