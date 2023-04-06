@@ -62,19 +62,6 @@ abstract contract TokenRouter is GasRouter {
         emit SentTransferRemote(_destination, _recipient, _amountOrId);
     }
 
-    function transferRemote(
-        uint32 _destination,
-        address _recipient,
-        uint256 _amountOrId
-    ) external payable returns (bytes32 messageId) {
-        return
-            transferRemote(
-                _destination,
-                _recipient.addressToBytes32(),
-                _amountOrId
-            );
-    }
-
     /**
      * @dev Should transfer `_amountOrId` of tokens from `msg.sender` to this token router.
      * @dev Called by `transferRemote` before message dispatch.
