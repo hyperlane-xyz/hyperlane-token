@@ -27,6 +27,8 @@ import {
   isUriConfig,
 } from './config';
 import { isTokenMetadata } from './config';
+import { ERC721RouterConfig } from './config';
+import { ERC20RouterConfig } from './config';
 import { HypERC20Factories, HypERC721Factories } from './contracts';
 import {
   ERC20__factory,
@@ -44,8 +46,6 @@ import {
   HypNative,
   HypNative__factory,
 } from './types';
-import { ERC721RouterConfig } from './config';
-import { ERC20RouterConfig } from './config';
 
 export class HypERC20Deployer extends GasRouterDeployer<
   ERC20RouterConfig,
@@ -60,10 +60,13 @@ export class HypERC20Deployer extends GasRouterDeployer<
     config: CollateralConfig,
   ): Promise<ERC20Metadata> {
     const erc20 = ERC20__factory.connect(config.token, provider);
-    const name = await erc20.name();
-    const symbol = await erc20.symbol();
-    const totalSupply = await erc20.totalSupply();
-    const decimals = await erc20.decimals();
+
+    const [name, symbol, totalSupply, decimals] = await Promise.all([
+      erc20.name(),
+      erc20.symbol(),
+      erc20.totalSupply(),
+      erc20.decimals(),
+    ]);
 
     return { name, symbol, totalSupply, decimals };
   }
@@ -182,12 +185,12 @@ export class HypERC20Deployer extends GasRouterDeployer<
         tokenMetadata = config;
       }
     }
-    
+
     if (!isErc20Metadata(tokenMetadata)) {
       throw new Error('Invalid ERC20 token metadata');
     }
 
-    return objMap(configMap, () => (tokenMetadata!));
+    return objMap(configMap, () => tokenMetadata!);
   }
 
   buildGasOverhead(configMap: ChainMap<TokenConfig>): ChainMap<GasConfig> {
@@ -199,16 +202,13 @@ export class HypERC20Deployer extends GasRouterDeployer<
   async deploy(configMap: ChainMap<TokenConfig & RouterConfig>) {
     const tokenMetadata = await this.buildTokenMetadata(configMap);
     const gasOverhead = this.buildGasOverhead(configMap);
-    const mergedConfig = objMap(
-      configMap,
-      (chain, config) => {
-        return {
-          ...tokenMetadata[chain],
-          ...gasOverhead[chain],
-          ...config,
-        };
-      },
-    ) as ChainMap<ERC20RouterConfig>;
+    const mergedConfig = objMap(configMap, (chain, config) => {
+      return {
+        ...tokenMetadata[chain],
+        ...gasOverhead[chain],
+        ...config,
+      };
+    }) as ChainMap<ERC20RouterConfig>;
 
     return super.deploy(mergedConfig);
   }
@@ -230,9 +230,11 @@ export class HypERC721Deployer extends GasRouterDeployer<
       config.token,
       provider,
     );
-    const name = await erc721.name();
-    const symbol = await erc721.symbol();
-    const totalSupply = await erc721.totalSupply();
+    const [name, symbol, totalSupply] = await Promise.all([
+      erc721.name(),
+      erc721.symbol(),
+      erc721.totalSupply(),
+    ]);
 
     return { name, symbol, totalSupply };
   }
@@ -350,7 +352,7 @@ export class HypERC721Deployer extends GasRouterDeployer<
       throw new Error('Invalid ERC721 token metadata');
     }
 
-    return objMap(configMap, () => (tokenMetadata!));
+    return objMap(configMap, () => tokenMetadata!);
   }
 
   buildGasOverhead(configMap: ChainMap<TokenConfig>): ChainMap<GasConfig> {
@@ -362,16 +364,13 @@ export class HypERC721Deployer extends GasRouterDeployer<
   async deploy(configMap: ChainMap<TokenConfig & RouterConfig>) {
     const tokenMetadata = await this.buildTokenMetadata(configMap);
     const gasOverhead = this.buildGasOverhead(configMap);
-    const mergedConfig = objMap(
-      configMap,
-      (chain, config) => {
-        return {
-          ...tokenMetadata[chain],
-          ...gasOverhead[chain],
-          ...config,
-        };
-      },
-    ) as ChainMap<ERC721RouterConfig>;
+    const mergedConfig = objMap(configMap, (chain, config) => {
+      return {
+        ...tokenMetadata[chain],
+        ...gasOverhead[chain],
+        ...config,
+      };
+    }) as ChainMap<ERC721RouterConfig>;
 
     return super.deploy(mergedConfig);
   }

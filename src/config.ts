@@ -37,11 +37,7 @@ export type NativeConfig = {
   type: TokenType.native;
 };
 
-export type TokenConfig = { type: TokenType } & (
-  | SyntheticConfig
-  | CollateralConfig
-  | NativeConfig
-);
+export type TokenConfig = SyntheticConfig | CollateralConfig | NativeConfig;
 
 export const isCollateralConfig = (
   config: TokenConfig,

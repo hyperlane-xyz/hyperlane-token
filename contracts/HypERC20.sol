@@ -11,10 +11,10 @@ import {ERC20Upgradeable} from "@openzeppelin/contracts-upgradeable/token/ERC20/
  * @dev Supply on each chain is not constant but the aggregate supply across all chains is.
  */
 contract HypERC20 is ERC20Upgradeable, TokenRouter {
-    uint8 private immutable decimalsConfig;
+    uint8 private immutable _decimals;
 
-    constructor(uint8 _decimals) {
-        decimalsConfig = _decimals;
+    constructor(uint8 decimals) {
+        _decimals = decimals;
     }
 
     /**
@@ -44,7 +44,7 @@ contract HypERC20 is ERC20Upgradeable, TokenRouter {
     }
 
     function decimals() public view override returns (uint8) {
-        return decimalsConfig;
+        return _decimals;
     }
 
     /**
