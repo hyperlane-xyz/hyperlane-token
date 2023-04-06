@@ -6,11 +6,11 @@ import {Message} from "./libs/Message.sol";
 import {Address} from "@openzeppelin/contracts/utils/Address.sol";
 
 /**
- * @title Hyperlane Native Token Router that extends ERC20 with remote transfer functionality.
+ * @title Hyperlane Native Collateral Token Router that extends native asset with remote transfer functionality.
  * @author Abacus Works
  * @dev Supply on each chain is not constant but the aggregate supply across all chains is.
  */
-contract HypNative is TokenRouter {
+contract HypNativeCollateral is TokenRouter {
     /**
      * @notice Initializes the Hyperlane router, ERC20 metadata, and mints initial supply to deployer.
      * @param _mailbox The address of the mailbox contract.

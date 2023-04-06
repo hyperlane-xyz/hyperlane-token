@@ -114,7 +114,7 @@ for (const withCollateral of [true, false]) {
         deployer = new HypERC721Deployer(multiProvider);
         contracts = await deployer.deploy(configWithTokenInfo);
 
-        local = contracts[localChain].router;
+        local = deployer.router(contracts[localChain]);
         if (withCollateral) {
           // approve wrapper to transfer tokens
           await erc721!.approve(local.address, tokenId);
@@ -124,7 +124,7 @@ for (const withCollateral of [true, false]) {
         }
         interchainGasPayment = await local.quoteGasPayment(remoteDomain);
 
-        remote = contracts[remoteChain].router;
+        remote = deployer.router(contracts[remoteChain]);
       });
 
       it('should not be initializable again', async () => {

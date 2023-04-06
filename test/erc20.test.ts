@@ -27,7 +27,7 @@ import {
   ERC20__factory,
   HypERC20,
   HypERC20Collateral,
-  HypNative,
+  HypNativeCollateral,
 } from '../src/types';
 
 const localChain = Chains.test1;
@@ -44,20 +44,24 @@ const tokenMetadata = {
   totalSupply,
 };
 
+let index = 0;
 for (const variant of [
   TokenType.synthetic,
   TokenType.collateral,
-  TokenType.native,
+  TokenType.collateral
 ]) {
-  describe(`HypERC20${variant}`, async () => {
+  const isNative = index === 2;
+  index += 1;
+
+  describe(`Hyp${isNative ? 'Native' : 'ERC20'}${variant}`, async () => {
     let owner: SignerWithAddress;
     let recipient: SignerWithAddress;
     let core: TestCoreApp;
     let deployer: HypERC20Deployer;
     let contracts: HyperlaneContractsMap<HypERC20Factories>;
     let localTokenConfig: TokenConfig;
-    let local: HypERC20 | HypERC20Collateral | HypNative;
-    let remote: HypERC20;
+    let local: HypERC20 | HypERC20Collateral | HypNativeCollateral;
+    let remote: HypERC20 | HypERC20Collateral | HypNativeCollateral;
     let interchainGasPayment: BigNumber;
 
     beforeEach(async () => {
@@ -79,19 +83,21 @@ for (const variant of [
 
       let erc20: ERC20 | undefined;
       if (variant === TokenType.collateral) {
-        erc20 = await new ERC20Test__factory(owner).deploy(
-          tokenMetadata.name,
-          tokenMetadata.symbol,
-          tokenMetadata.totalSupply,
-        );
-        localTokenConfig = {
-          type: variant,
-          token: erc20.address,
-        };
-      } else if (variant === TokenType.native) {
-        localTokenConfig = {
-          type: variant,
-        };
+        if (isNative) {
+          localTokenConfig = {
+            type: variant,
+          };
+        } else {
+          erc20 = await new ERC20Test__factory(owner).deploy(
+            tokenMetadata.name,
+            tokenMetadata.symbol,
+            tokenMetadata.totalSupply,
+          );
+          localTokenConfig = {
+            type: variant,
+            token: erc20.address,
+          };
+        }
       } else if (variant === TokenType.synthetic) {
         localTokenConfig = { type: variant, ...tokenMetadata };
       }
@@ -106,25 +112,25 @@ for (const variant of [
 
       deployer = new HypERC20Deployer(multiProvider);
       contracts = await deployer.deploy(config);
-      local = contracts[localChain].router;
+      local = deployer.router(contracts[localChain]);
 
       interchainGasPayment = await local.quoteGasPayment(remoteDomain);
-
-      if (variant === TokenType.native) {
-        interchainGasPayment = interchainGasPayment.add(amount);
-      }
-
+      
       if (variant === TokenType.collateral) {
-        await erc20!.approve(local.address, amount);
+        if (isNative) {
+          interchainGasPayment = interchainGasPayment.add(amount);
+        } else {
+          await erc20!.approve(local.address, amount);
+        }
       }
 
-      remote = contracts[remoteChain].router as HypERC20;
+      remote = deployer.router(contracts[remoteChain]);
     });
 
     it('should not be initializable again', async () => {
       const initializeTx =
-        variant === TokenType.collateral || variant === TokenType.native
-          ? (local as HypERC20Collateral).initialize(
+        variant === TokenType.collateral
+          ? (local as HypERC20Collateral | HypNativeCollateral).initialize(
               ethers.constants.AddressZero,
               ethers.constants.AddressZero,
             )
@@ -161,18 +167,20 @@ for (const variant of [
       const localRaw = local.connect(ethers.provider);
       const mailboxAddress = core.contractsMap[localChain].mailbox.address;
       if (variant === TokenType.collateral) {
-        const tokenAddress = await (local as HypERC20Collateral).wrappedToken();
-        const token = ERC20__factory.connect(tokenAddress, owner);
-        await token.transfer(local.address, totalSupply);
-      } else if (variant === TokenType.native) {
-        const remoteDomain = core.multiProvider.getDomainId(remoteChain);
-        // deposit amount
-        await local.transferRemote(
-          remoteDomain,
-          utils.addressToBytes32(remote.address),
-          amount,
-          { value: interchainGasPayment },
-        );
+        if (isNative) {
+          const remoteDomain = core.multiProvider.getDomainId(remoteChain);
+          // deposit amount
+          await local.transferRemote(
+            remoteDomain,
+            utils.addressToBytes32(remote.address),
+            amount,
+            { value: interchainGasPayment },
+          );
+        } else {
+          const tokenAddress = await (local as HypERC20Collateral).wrappedToken();
+          const token = ERC20__factory.connect(tokenAddress, owner);
+          await token.transfer(local.address, totalSupply);
+        }
       }
       const message = `${utils.addressToBytes32(
         recipient.address,
@@ -204,7 +212,7 @@ for (const variant of [
       let expectedLocal = localOwner.sub(amount);
 
       await expectBalance(local, recipient, localRecipient);
-      if (variant === TokenType.native) {
+      if (isNative) {
         // account for tx fees, rewards, etc.
         expectedLocal = await local.balanceOf(owner.address);
       }
@@ -215,7 +223,7 @@ for (const variant of [
       await core.processMessages();
 
       await expectBalance(local, recipient, localRecipient);
-      if (variant === TokenType.native) {
+      if (isNative) {
         // account for tx fees, rewards, etc.
         expectedLocal = await local.balanceOf(owner.address);
       }
@@ -244,14 +252,15 @@ for (const variant of [
           case TokenType.synthetic:
             return 'ERC20: burn amount exceeds balance';
           case TokenType.collateral:
-            return 'ERC20: insufficient allowance';
-          case TokenType.native:
-            return 'Native: amount exceeds msg.value';
+            if (isNative) {
+              return 'Native: amount exceeds msg.value';
+            } else {
+              return 'ERC20: insufficient allowance';
+            }
         }
         return '';
       };
-      const value =
-        variant === TokenType.native ? amount - 1 : interchainGasPayment;
+      const value = isNative ? amount - 1 : interchainGasPayment;
       await expect(
         local
           .connect(recipient)
@@ -283,7 +292,7 @@ for (const variant of [
 }
 
 const expectBalance = async (
-  token: HypERC20 | HypERC20Collateral | ERC20 | HypNative,
+  token: HypERC20 | HypERC20Collateral | ERC20 | HypNativeCollateral,
   signer: SignerWithAddress,
   balance: BigNumberish,
 ) => {

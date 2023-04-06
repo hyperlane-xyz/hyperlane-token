@@ -1,10 +1,7 @@
 export { HypERC20App, HypERC721App } from './app';
 export {
   CollateralConfig,
-  HypERC20CollateralConfig,
-  HypERC20Config,
-  HypERC721CollateralConfig,
-  HypERC721Config,
+  TokenRouterConfig,
   isCollateralConfig,
   isUriConfig,
   SyntheticConfig,
