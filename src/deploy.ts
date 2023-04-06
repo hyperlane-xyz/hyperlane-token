@@ -141,10 +141,6 @@ export class HypERC20Deployer extends GasRouterDeployer<
     return contracts.router;
   }
 
-  router(contracts: HyperlaneContracts<HypERC20Factories>) {
-    return contracts.router;
-  }
-
   async deployContracts(chain: ChainName, config: HypERC20Config) {
     let router: HypERC20 | HypERC20Collateral | HypNative;
     if (isCollateralConfig(config)) {
