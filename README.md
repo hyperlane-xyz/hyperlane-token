@@ -217,6 +217,8 @@ graph TB
     linkStyle 7 color:green;
 ```
 
+**NOTE:** ERC721 collateral variants are assumed to [enumerable](https://docs.openzeppelin.com/contracts/4.x/api/token/erc721#IERC721Enumerable) and [metadata](https://docs.openzeppelin.com/contracts/4.x/api/token/erc721#IERC721Metadata) compliant.
+
 ## Versions
 
 | Git Ref | Release Date | Notes |
