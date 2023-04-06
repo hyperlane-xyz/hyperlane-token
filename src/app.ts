@@ -3,19 +3,25 @@ import { BigNumberish } from 'ethers';
 import { ChainName, HyperlaneContracts, RouterApp } from '@hyperlane-xyz/sdk';
 import { types } from '@hyperlane-xyz/utils';
 
+import { TokenType } from './config';
 import {
   HypERC20Factories,
   HypERC721Factories,
   TokenFactories,
 } from './contracts';
-import { TokenRouter } from './types';
+import {
+  HypERC20,
+  HypERC20Collateral,
+  HypERC721,
+  HypERC721Collateral,
+  HypNativeCollateral,
+  TokenRouter,
+} from './types';
 
-class HyperlaneTokenApp<
+abstract class HyperlaneTokenApp<
   Factories extends TokenFactories,
 > extends RouterApp<Factories> {
-  router(contracts: HyperlaneContracts<TokenFactories>): TokenRouter {
-    return contracts.router;
-  }
+  abstract router(contracts: HyperlaneContracts<Factories>): TokenRouter;
 
   async transfer(
     origin: ChainName,
@@ -23,7 +29,7 @@ class HyperlaneTokenApp<
     recipient: types.Address,
     amountOrId: BigNumberish,
   ) {
-    const originRouter = this.getContracts(origin).router;
+    const originRouter = this.router(this.getContracts(origin));
     const destProvider = this.multiProvider.getProvider(destination);
     const destinationNetwork = await destProvider.getNetwork();
     const gasPayment = await originRouter.quoteGasPayment(
@@ -44,13 +50,23 @@ class HyperlaneTokenApp<
 }
 
 export class HypERC20App extends HyperlaneTokenApp<HypERC20Factories> {
+  router(
+    contracts: HyperlaneContracts<HypERC20Factories>,
+  ): HypERC20 | HypERC20Collateral | HypNativeCollateral {
+    return (
+      contracts[TokenType.synthetic] ||
+      contracts[TokenType.collateral] ||
+      contracts[TokenType.native]
+    );
+  }
+
   async transfer(
     origin: ChainName,
     destination: ChainName,
     recipient: types.Address,
     amount: BigNumberish,
   ) {
-    const originRouter = this.getContracts(origin).router;
+    const originRouter = this.router(this.getContracts(origin));
     const signerAddress = await this.multiProvider.getSignerAddress(origin);
     const balance = await originRouter.balanceOf(signerAddress);
     if (balance.lt(amount))
@@ -62,13 +78,19 @@ export class HypERC20App extends HyperlaneTokenApp<HypERC20Factories> {
 }
 
 export class HypERC721App extends HyperlaneTokenApp<HypERC721Factories> {
+  router(
+    contracts: HyperlaneContracts<HypERC721Factories>,
+  ): HypERC721 | HypERC721Collateral {
+    return contracts[TokenType.synthetic] || contracts[TokenType.collateral];
+  }
+
   async transfer(
     origin: ChainName,
     destination: ChainName,
     recipient: types.Address,
     tokenId: BigNumberish,
   ) {
-    const originRouter = this.getContracts(origin).router;
+    const originRouter = this.router(this.getContracts(origin));
     const signerAddress = await this.multiProvider.getSignerAddress(origin);
     const owner = await originRouter.ownerOf(tokenId);
     if (signerAddress != owner)

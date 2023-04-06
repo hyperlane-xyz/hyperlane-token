@@ -6,11 +6,9 @@ import { ethers } from 'hardhat';
 
 import { InterchainGasPaymaster__factory } from '@hyperlane-xyz/core';
 import {
-  ChainMap,
   Chains,
   HyperlaneContractsMap,
   MultiProvider,
-  RouterConfig,
   TestCoreApp,
   TestCoreDeployer,
   deployTestIgpsAndGetRouterConfig,
@@ -27,7 +25,7 @@ import {
   ERC20__factory,
   HypERC20,
   HypERC20Collateral,
-  HypNative,
+  HypNativeCollateral,
 } from '../src/types';
 
 const localChain = Chains.test1;
@@ -56,8 +54,8 @@ for (const variant of [
     let deployer: HypERC20Deployer;
     let contracts: HyperlaneContractsMap<HypERC20Factories>;
     let localTokenConfig: TokenConfig;
-    let local: HypERC20 | HypERC20Collateral | HypNative;
-    let remote: HypERC20;
+    let local: HypERC20 | HypERC20Collateral | HypNativeCollateral;
+    let remote: HypERC20 | HypERC20Collateral | HypNativeCollateral;
     let interchainGasPayment: BigNumber;
 
     beforeEach(async () => {
@@ -102,11 +100,11 @@ for (const variant of [
           ? localTokenConfig
           : { type: TokenType.synthetic }),
         owner: owner.address,
-      })) as ChainMap<TokenConfig & RouterConfig>;
+      }));
 
       deployer = new HypERC20Deployer(multiProvider);
       contracts = await deployer.deploy(config);
-      local = contracts[localChain].router;
+      local = deployer.router(contracts[localChain]);
 
       interchainGasPayment = await local.quoteGasPayment(remoteDomain);
 
@@ -118,7 +116,7 @@ for (const variant of [
         await erc20!.approve(local.address, amount);
       }
 
-      remote = contracts[remoteChain].router as HypERC20;
+      remote = deployer.router(contracts[remoteChain]);
     });
 
     it('should not be initializable again', async () => {
@@ -283,7 +281,7 @@ for (const variant of [
 }
 
 const expectBalance = async (
-  token: HypERC20 | HypERC20Collateral | ERC20 | HypNative,
+  token: HypERC20 | HypERC20Collateral | ERC20 | HypNativeCollateral,
   signer: SignerWithAddress,
   balance: BigNumberish,
 ) => {

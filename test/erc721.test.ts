@@ -100,9 +100,9 @@ for (const withCollateral of [true, false]) {
         let erc721: ERC721 | undefined;
         if (withCollateral) {
           erc721 = await new ERC721Test__factory(owner).deploy(
-            tokenConfig.name,
-            tokenConfig.symbol,
-            tokenConfig.totalSupply,
+            tokenConfig.name!,
+            tokenConfig.symbol!,
+            tokenConfig.totalSupply!,
           );
           configWithTokenInfo.test1 = {
             type: withUri ? TokenType.collateralUri : TokenType.collateral,
@@ -114,7 +114,7 @@ for (const withCollateral of [true, false]) {
         deployer = new HypERC721Deployer(multiProvider);
         contracts = await deployer.deploy(configWithTokenInfo);
 
-        local = contracts[localChain].router;
+        local = deployer.router(contracts[localChain]);
         if (withCollateral) {
           // approve wrapper to transfer tokens
           await erc721!.approve(local.address, tokenId);
@@ -124,7 +124,7 @@ for (const withCollateral of [true, false]) {
         }
         interchainGasPayment = await local.quoteGasPayment(remoteDomain);
 
-        remote = contracts[remoteChain].router;
+        remote = deployer.router(contracts[remoteChain]);
       });
 
       it('should not be initializable again', async () => {
