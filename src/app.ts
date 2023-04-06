@@ -3,19 +3,25 @@ import { BigNumberish } from 'ethers';
 import { ChainName, HyperlaneContracts, RouterApp } from '@hyperlane-xyz/sdk';
 import { types } from '@hyperlane-xyz/utils';
 
+import { TokenType } from './config';
 import {
   HypERC20Factories,
   HypERC721Factories,
   TokenFactories,
 } from './contracts';
-import { HypERC20, HypERC20Collateral, HypERC721, HypERC721Collateral, HypNativeCollateral, TokenRouter } from './types';
+import {
+  HypERC20,
+  HypERC20Collateral,
+  HypERC721,
+  HypERC721Collateral,
+  HypNativeCollateral,
+  TokenRouter,
+} from './types';
 
-class HyperlaneTokenApp<
+abstract class HyperlaneTokenApp<
   Factories extends TokenFactories,
 > extends RouterApp<Factories> {
-  router(contracts: HyperlaneContracts<Factories>): TokenRouter {
-    return contracts['synthetic'] || contracts['collateral'];
-  }
+  abstract router(contracts: HyperlaneContracts<Factories>): TokenRouter;
 
   async transfer(
     origin: ChainName,
@@ -44,8 +50,14 @@ class HyperlaneTokenApp<
 }
 
 export class HypERC20App extends HyperlaneTokenApp<HypERC20Factories> {
-  router(contracts: HyperlaneContracts<HypERC20Factories>): HypERC20 | HypERC20Collateral | HypNativeCollateral {
-    return contracts['synthetic'] || contracts['collateral'];
+  router(
+    contracts: HyperlaneContracts<HypERC20Factories>,
+  ): HypERC20 | HypERC20Collateral | HypNativeCollateral {
+    return (
+      contracts[TokenType.synthetic] ||
+      contracts[TokenType.collateral] ||
+      contracts[TokenType.native]
+    );
   }
 
   async transfer(
@@ -66,8 +78,10 @@ export class HypERC20App extends HyperlaneTokenApp<HypERC20Factories> {
 }
 
 export class HypERC721App extends HyperlaneTokenApp<HypERC721Factories> {
-  router(contracts: HyperlaneContracts<HypERC721Factories>): HypERC721 | HypERC721Collateral {
-    return contracts['synthetic'] || contracts['collateral'];
+  router(
+    contracts: HyperlaneContracts<HypERC721Factories>,
+  ): HypERC721 | HypERC721Collateral {
+    return contracts[TokenType.synthetic] || contracts[TokenType.collateral];
   }
 
   async transfer(

@@ -1,4 +1,5 @@
-import { ethers } from 'ethers';
+import { HyperlaneFactories } from '@hyperlane-xyz/sdk';
+import { TokenType } from './config';
 import {
   HypERC20Collateral__factory,
   HypERC20__factory,
@@ -7,23 +8,26 @@ import {
   HypERC721URIStorage__factory,
   HypERC721__factory,
   HypNativeCollateral__factory,
-  TokenRouter__factory,
+  TokenRouter,
 } from './types';
 
-export type TokenFactories = { synthetic: TokenRouter__factory & ethers.ContractFactory } | { collateral: TokenRouter__factory & ethers.ContractFactory };
+type TokenRouterFactory = { deploy(...args: any[]): Promise<TokenRouter>; };
 
-export type HypERC20Factories =
-  | {
-      synthetic: HypERC20__factory;
-    }
-  | { collateral: HypERC20Collateral__factory | HypNativeCollateral__factory };
+export type TokenFactories = Partial<Record<TokenType, TokenRouterFactory>> & HyperlaneFactories;
 
-export type HypERC721Factories =
-  | {
-      synthetic: HypERC721__factory | HypERC721URIStorage__factory;
-    }
-  | {
-      collateral:
-        | HypERC721Collateral__factory
-        | HypERC721URICollateral__factory;
-    };
+export const hypErc20Factories = {
+  [TokenType.synthetic]: new HypERC20__factory(),
+  [TokenType.collateral]: new HypERC20Collateral__factory(),
+  [TokenType.native]: new HypNativeCollateral__factory(),
+};
+
+export type HypERC20Factories = typeof hypErc20Factories;
+
+export const hypErc721Factories = {
+  [TokenType.synthetic]: new HypERC721__factory(),
+  [TokenType.syntheticUri]: new HypERC721URIStorage__factory(),
+  [TokenType.collateral]: new HypERC721Collateral__factory(),
+  [TokenType.collateralUri]: new HypERC721URICollateral__factory(),
+};
+
+export type HypERC721Factories = typeof hypErc721Factories;

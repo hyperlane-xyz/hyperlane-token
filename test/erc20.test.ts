@@ -44,16 +44,12 @@ const tokenMetadata = {
   totalSupply,
 };
 
-let index = 0;
 for (const variant of [
   TokenType.synthetic,
   TokenType.collateral,
-  TokenType.collateral
+  TokenType.native,
 ]) {
-  const isNative = index === 2;
-  index += 1;
-
-  describe(`Hyp${isNative ? 'Native' : 'ERC20'}${variant}`, async () => {
+  describe(`HypERC20${variant}`, async () => {
     let owner: SignerWithAddress;
     let recipient: SignerWithAddress;
     let core: TestCoreApp;
@@ -83,21 +79,19 @@ for (const variant of [
 
       let erc20: ERC20 | undefined;
       if (variant === TokenType.collateral) {
-        if (isNative) {
-          localTokenConfig = {
-            type: variant,
-          };
-        } else {
-          erc20 = await new ERC20Test__factory(owner).deploy(
-            tokenMetadata.name,
-            tokenMetadata.symbol,
-            tokenMetadata.totalSupply,
-          );
-          localTokenConfig = {
-            type: variant,
-            token: erc20.address,
-          };
-        }
+        erc20 = await new ERC20Test__factory(owner).deploy(
+          tokenMetadata.name,
+          tokenMetadata.symbol,
+          tokenMetadata.totalSupply,
+        );
+        localTokenConfig = {
+          type: variant,
+          token: erc20.address,
+        };
+      } else if (variant === TokenType.native) {
+        localTokenConfig = {
+          type: variant,
+        };
       } else if (variant === TokenType.synthetic) {
         localTokenConfig = { type: variant, ...tokenMetadata };
       }
@@ -115,13 +109,13 @@ for (const variant of [
       local = deployer.router(contracts[localChain]);
 
       interchainGasPayment = await local.quoteGasPayment(remoteDomain);
-      
+
+      if (variant === TokenType.native) {
+        interchainGasPayment = interchainGasPayment.add(amount);
+      }
+
       if (variant === TokenType.collateral) {
-        if (isNative) {
-          interchainGasPayment = interchainGasPayment.add(amount);
-        } else {
-          await erc20!.approve(local.address, amount);
-        }
+        await erc20!.approve(local.address, amount);
       }
 
       remote = deployer.router(contracts[remoteChain]);
@@ -129,8 +123,8 @@ for (const variant of [
 
     it('should not be initializable again', async () => {
       const initializeTx =
-        variant === TokenType.collateral
-          ? (local as HypERC20Collateral | HypNativeCollateral).initialize(
+        variant === TokenType.collateral || variant === TokenType.native
+          ? (local as HypERC20Collateral).initialize(
               ethers.constants.AddressZero,
               ethers.constants.AddressZero,
             )
@@ -167,20 +161,18 @@ for (const variant of [
       const localRaw = local.connect(ethers.provider);
       const mailboxAddress = core.contractsMap[localChain].mailbox.address;
       if (variant === TokenType.collateral) {
-        if (isNative) {
-          const remoteDomain = core.multiProvider.getDomainId(remoteChain);
-          // deposit amount
-          await local.transferRemote(
-            remoteDomain,
-            utils.addressToBytes32(remote.address),
-            amount,
-            { value: interchainGasPayment },
-          );
-        } else {
-          const tokenAddress = await (local as HypERC20Collateral).wrappedToken();
-          const token = ERC20__factory.connect(tokenAddress, owner);
-          await token.transfer(local.address, totalSupply);
-        }
+        const tokenAddress = await (local as HypERC20Collateral).wrappedToken();
+        const token = ERC20__factory.connect(tokenAddress, owner);
+        await token.transfer(local.address, totalSupply);
+      } else if (variant === TokenType.native) {
+        const remoteDomain = core.multiProvider.getDomainId(remoteChain);
+        // deposit amount
+        await local.transferRemote(
+          remoteDomain,
+          utils.addressToBytes32(remote.address),
+          amount,
+          { value: interchainGasPayment },
+        );
       }
       const message = `${utils.addressToBytes32(
         recipient.address,
@@ -212,7 +204,7 @@ for (const variant of [
       let expectedLocal = localOwner.sub(amount);
 
       await expectBalance(local, recipient, localRecipient);
-      if (isNative) {
+      if (variant === TokenType.native) {
         // account for tx fees, rewards, etc.
         expectedLocal = await local.balanceOf(owner.address);
       }
@@ -223,7 +215,7 @@ for (const variant of [
       await core.processMessages();
 
       await expectBalance(local, recipient, localRecipient);
-      if (isNative) {
+      if (variant === TokenType.native) {
         // account for tx fees, rewards, etc.
         expectedLocal = await local.balanceOf(owner.address);
       }
@@ -252,15 +244,14 @@ for (const variant of [
           case TokenType.synthetic:
             return 'ERC20: burn amount exceeds balance';
           case TokenType.collateral:
-            if (isNative) {
-              return 'Native: amount exceeds msg.value';
-            } else {
-              return 'ERC20: insufficient allowance';
-            }
+            return 'ERC20: insufficient allowance';
+          case TokenType.native:
+            return 'Native: amount exceeds msg.value';
         }
         return '';
       };
-      const value = isNative ? amount - 1 : interchainGasPayment;
+      const value =
+        variant === TokenType.native ? amount - 1 : interchainGasPayment;
       await expect(
         local
           .connect(recipient)
