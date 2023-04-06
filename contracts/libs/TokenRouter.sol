@@ -67,7 +67,12 @@ abstract contract TokenRouter is GasRouter {
         address _recipient,
         uint256 _amountOrId
     ) external payable returns (bytes32 messageId) {
-        return transferRemote(_destination, _recipient.addressToBytes32(), _amountOrId);
+        return
+            transferRemote(
+                _destination,
+                _recipient.addressToBytes32(),
+                _amountOrId
+            );
     }
 
     /**

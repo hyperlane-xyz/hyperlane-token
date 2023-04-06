@@ -31,7 +31,7 @@ class HyperlaneTokenApp<
     );
     return this.multiProvider.handleTx(
       origin,
-      originRouter.transferRemote(
+      originRouter['transferRemote(uint32,address,uint256)'](
         destinationNetwork.chainId,
         recipient,
         amountOrId,
