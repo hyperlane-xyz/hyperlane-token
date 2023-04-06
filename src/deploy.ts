@@ -77,7 +77,7 @@ export class HypERC20Deployer extends TokenDeployer<HypERC20Factories> {
           const [name, symbol, totalSupply, decimals] = await Promise.all([
             erc20.name(),
             erc20.symbol(),
-            erc20.totalSupply(),
+            0, // erc20.totalSupply(): always 0 for collateral
             erc20.decimals(),
           ]);
           return { name, symbol, totalSupply, decimals };
@@ -133,7 +133,9 @@ export class HypERC20Deployer extends TokenDeployer<HypERC20Factories> {
       config.type,
       isSyntheticConfig(config)
         ? [config.decimals]
-        : config.token ? [config.token] : [],
+        : config.token
+        ? [config.token]
+        : [],
       isSyntheticConfig(config)
         ? [
             config.mailbox,
@@ -169,7 +171,7 @@ export class HypERC721Deployer extends TokenDeployer<HypERC721Factories> {
           const [name, symbol, totalSupply] = await Promise.all([
             erc721.name(),
             erc721.symbol(),
-            erc721.totalSupply(),
+            0, // erc721.totalSupply() always 0 for collateral
           ]);
 
           return { name, symbol, totalSupply };
