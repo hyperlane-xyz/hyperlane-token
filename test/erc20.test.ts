@@ -6,11 +6,9 @@ import { ethers } from 'hardhat';
 
 import { InterchainGasPaymaster__factory } from '@hyperlane-xyz/core';
 import {
-  ChainMap,
   Chains,
   HyperlaneContractsMap,
   MultiProvider,
-  RouterConfig,
   TestCoreApp,
   TestCoreDeployer,
   deployTestIgpsAndGetRouterConfig,
@@ -102,7 +100,7 @@ for (const variant of [
           ? localTokenConfig
           : { type: TokenType.synthetic }),
         owner: owner.address,
-      })) as ChainMap<TokenConfig & RouterConfig>;
+      }));
 
       deployer = new HypERC20Deployer(multiProvider);
       contracts = await deployer.deploy(config);

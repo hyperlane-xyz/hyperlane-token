@@ -100,9 +100,9 @@ for (const withCollateral of [true, false]) {
         let erc721: ERC721 | undefined;
         if (withCollateral) {
           erc721 = await new ERC721Test__factory(owner).deploy(
-            tokenConfig.name,
-            tokenConfig.symbol,
-            tokenConfig.totalSupply,
+            tokenConfig.name!,
+            tokenConfig.symbol!,
+            tokenConfig.totalSupply!,
           );
           configWithTokenInfo.test1 = {
             type: withUri ? TokenType.collateralUri : TokenType.collateral,
