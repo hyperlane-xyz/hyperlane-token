@@ -56,18 +56,9 @@ yarn
 yarn build:dev
 ```
 
-## Steps to Deploy a Warp ERC-20 token
+## Steps to Deploy a Warp Route
 
-1> Add your token details in this file https://github.com/hyperlane-xyz/hyperlane-token/blob/main/configs/warp-route-token-config.json 
-
-2> If you are deploying to a new Chain add its configs in this file https://github.com/hyperlane-xyz/hyperlane-token/blob/main/configs/warp-route-chain-config.json
-
-3> Run these commands in terminal
-
-` export PRIVATE_KEY=<your Private key>`
-
-`$ yarn deploy-warp-route --private-key $PRIVATE_KEY \
-    --token-config my-token-config.json --chain-config my-chain-config.json`
+Find it here - https://docs.hyperlane.xyz/docs/deploy/deploy-warp-route/deploy-a-warp-route
 
 ## Unit testing
 
