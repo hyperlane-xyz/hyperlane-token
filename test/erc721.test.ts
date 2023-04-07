@@ -4,23 +4,20 @@ import { expect } from 'chai';
 import { BigNumber, BigNumberish } from 'ethers';
 import { ethers } from 'hardhat';
 
+import { InterchainGasPaymaster__factory } from '@hyperlane-xyz/core';
 import {
-  ChainMap,
   Chains,
+  HyperlaneContractsMap,
   MultiProvider,
   TestCoreApp,
   TestCoreDeployer,
+  deployTestIgpsAndGetRouterConfig,
   objMap,
 } from '@hyperlane-xyz/sdk';
 import { utils } from '@hyperlane-xyz/utils';
 
-import {
-  HypERC721CollateralConfig,
-  HypERC721Config,
-  SyntheticConfig,
-  TokenType,
-} from '../src/config';
-import { HypERC721Contracts } from '../src/contracts';
+import { TokenConfig, TokenType } from '../src/config';
+import { HypERC721Factories } from '../src/contracts';
 import { HypERC721Deployer } from '../src/deploy';
 import {
   ERC721,
@@ -42,20 +39,21 @@ const tokenId2 = 20;
 const tokenId3 = 30;
 const tokenId4 = 40;
 
+const tokenMetadata = {
+  name: 'HypERC721',
+  symbol: 'HYP',
+  totalSupply,
+};
+
 for (const withCollateral of [true, false]) {
   for (const withUri of [true, false]) {
-    const tokenConfig: SyntheticConfig = {
+    const tokenConfig: TokenConfig = {
       type: withUri ? TokenType.syntheticUri : TokenType.synthetic,
-      name: 'HypERC721',
-      symbol: 'HYP',
-      totalSupply,
+      ...tokenMetadata,
     };
 
     const configMap = {
-      test1: {
-        ...tokenConfig,
-        totalSupply,
-      },
+      test1: tokenConfig,
       test2: {
         ...tokenConfig,
         totalSupply: 0,
@@ -72,7 +70,7 @@ for (const withCollateral of [true, false]) {
       let recipient: SignerWithAddress;
       let core: TestCoreApp;
       let deployer: HypERC721Deployer;
-      let contracts: ChainMap<HypERC721Contracts>;
+      let contracts: HyperlaneContractsMap<HypERC721Factories>;
       let local: HypERC721 | HypERC721Collateral | HypERC721URICollateral;
       let remote: HypERC721 | HypERC721Collateral | HypERC721URIStorage;
       let interchainGasPayment: BigNumberish;
@@ -88,10 +86,12 @@ for (const withCollateral of [true, false]) {
         const coreDeployer = new TestCoreDeployer(multiProvider);
         const coreContractsMaps = await coreDeployer.deploy();
         core = new TestCoreApp(coreContractsMaps, multiProvider);
-        const coreConfig = core.getConnectionClientConfigMap();
-        const configWithTokenInfo: ChainMap<
-          HypERC721Config | HypERC721CollateralConfig
-        > = objMap(coreConfig, (key) => ({
+        const coreConfig = await deployTestIgpsAndGetRouterConfig(
+          multiProvider,
+          owner.address,
+          core.contractsMap,
+        );
+        const configWithTokenInfo = objMap(coreConfig, (key) => ({
           ...coreConfig[key],
           ...configMap[key],
           owner: owner.address,
@@ -105,18 +105,15 @@ for (const withCollateral of [true, false]) {
             tokenConfig.totalSupply,
           );
           configWithTokenInfo.test1 = {
-            ...configWithTokenInfo.test1,
             type: withUri ? TokenType.collateralUri : TokenType.collateral,
             token: erc721.address,
+            ...coreConfig.test1,
           };
         }
 
-        deployer = new HypERC721Deployer(
-          multiProvider,
-          configWithTokenInfo,
-          core,
-        );
-        contracts = await deployer.deploy();
+        deployer = new HypERC721Deployer(multiProvider);
+        contracts = await deployer.deploy(configWithTokenInfo);
+
         local = contracts[localChain].router;
         if (withCollateral) {
           // approve wrapper to transfer tokens
@@ -252,8 +249,7 @@ for (const withCollateral of [true, false]) {
 
       it('benchmark handle gas overhead', async () => {
         const localRaw = local.connect(ethers.provider);
-        const mailboxAddress =
-          core.contractsMap[localChain].mailbox.contract.address;
+        const mailboxAddress = core.contractsMap[localChain].mailbox.address;
         let tokenIdToUse: number;
         if (withCollateral) {
           const tokenAddress = await (
@@ -285,8 +281,9 @@ for (const withCollateral of [true, false]) {
       });
 
       it('allows interchain gas payment for remote transfers', async () => {
-        const interchainGasPaymaster =
-          core.contractsMap[localChain].interchainGasPaymaster.contract;
+        const interchainGasPaymaster = new InterchainGasPaymaster__factory()
+          .attach(await local.interchainGasPaymaster())
+          .connect(owner);
         await expect(
           local.transferRemote(
             remoteDomain,

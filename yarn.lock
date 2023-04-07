@@ -1220,14 +1220,14 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@hyperlane-xyz/core@npm:1.2.3":
-  version: 1.2.3
-  resolution: "@hyperlane-xyz/core@npm:1.2.3"
+"@hyperlane-xyz/core@npm:1.3.1":
+  version: 1.3.1
+  resolution: "@hyperlane-xyz/core@npm:1.3.1"
   dependencies:
-    "@hyperlane-xyz/utils": 1.2.3
+    "@hyperlane-xyz/utils": 1.3.1
     "@openzeppelin/contracts": ^4.8.0
     "@openzeppelin/contracts-upgradeable": ^4.8.0
-  checksum: c7e8f5c37d2e6874b6ca5f16024a4ea8b413393a2a4bb770a467ca7cc031b51a89fbe6989598c171de38acafcd2e990525be0274f793742faafc832a0db359fa
+  checksum: bb341b6ab2f7bbde057082ec277d48df5918b5a4c676887af9b49a54f9dc2d349c34cf74de7b1df20bddbadbdc7467628d3689182c01702cb21e0ac0e4e71981
   languageName: node
   linkType: hard
 
@@ -1235,9 +1235,9 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@hyperlane-xyz/hyperlane-token@workspace:."
   dependencies:
-    "@hyperlane-xyz/core": 1.2.3
-    "@hyperlane-xyz/sdk": 1.2.3
-    "@hyperlane-xyz/utils": 1.2.3
+    "@hyperlane-xyz/core": 1.3.1
+    "@hyperlane-xyz/sdk": 1.3.1
+    "@hyperlane-xyz/utils": 1.3.1
     "@nomiclabs/hardhat-ethers": ^2.2.1
     "@nomiclabs/hardhat-waffle": ^2.0.3
     "@openzeppelin/contracts-upgradeable": ^4.8.0
@@ -1265,28 +1265,30 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@hyperlane-xyz/sdk@npm:1.2.3":
-  version: 1.2.3
-  resolution: "@hyperlane-xyz/sdk@npm:1.2.3"
+"@hyperlane-xyz/sdk@npm:1.3.1":
+  version: 1.3.1
+  resolution: "@hyperlane-xyz/sdk@npm:1.3.1"
   dependencies:
-    "@hyperlane-xyz/core": 1.2.3
-    "@hyperlane-xyz/utils": 1.2.3
+    "@hyperlane-xyz/core": 1.3.1
+    "@hyperlane-xyz/utils": 1.3.1
+    "@types/coingecko-api": ^1.0.10
+    "@types/debug": ^4.1.7
     "@wagmi/chains": ^0.2.6
     coingecko-api: ^1.0.10
     cross-fetch: ^3.1.5
     debug: ^4.3.4
     ethers: ^5.7.2
     zod: ^3.21.2
-  checksum: a1afc8bdfe64916fdc6623c1df06bbe1393359fe6b29cefe3f25bb5ded16108e1bac037da9a29df7f0d61cc84940e571d148e41c7fd8539964a87e9a95c03c35
+  checksum: 3b1339dafb9ea8ba7c91ac3a51fd86638808bc60a06abd36e94fdc86316a7d591b395e5c94f9646d63331bde258f5013ee434e014ddf4d1db3d20a9b6b81f5dc
   languageName: node
   linkType: hard
 
-"@hyperlane-xyz/utils@npm:1.2.3":
-  version: 1.2.3
-  resolution: "@hyperlane-xyz/utils@npm:1.2.3"
+"@hyperlane-xyz/utils@npm:1.3.1":
+  version: 1.3.1
+  resolution: "@hyperlane-xyz/utils@npm:1.3.1"
   dependencies:
     ethers: ^5.7.2
-  checksum: 14222632d7ef2419f6b698afa0c4c466302dd0eb6f97d3c9031b7d42c033418547bf4092d480cc4346331f0233d4076caae75b86ffa2b7beed79741a146d3325
+  checksum: 960c972211618ea9b637bf98cdaf052f6175aa535ba6402617b84110731fe2657f8cdb387cc2be24c8250e87d46a99320f7d609067ee8e42b5d98644d0db4f95
   languageName: node
   linkType: hard
 
@@ -1803,12 +1805,28 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@types/coingecko-api@npm:^1.0.10":
+  version: 1.0.10
+  resolution: "@types/coingecko-api@npm:1.0.10"
+  checksum: e9683f9ea9ce2f855f6565089981dd3fceb6c4674365438f3fc3877d089a2fb82cdea011b59d59c7baa1635dc610860cd29a10a4b7a650ff96521ead46f22a50
+  languageName: node
+  linkType: hard
+
 "@types/concat-stream@npm:^1.6.0":
   version: 1.6.1
   resolution: "@types/concat-stream@npm:1.6.1"
   dependencies:
     "@types/node": "*"
   checksum: 7d211e74331affd3578b5469244f5cef84a93775f38332adb3ef12413559a23862bc682c6873d0a404b01c9d5d5f7d3ae091fe835b435b633eb420e3055b3e56
+  languageName: node
+  linkType: hard
+
+"@types/debug@npm:^4.1.7":
+  version: 4.1.7
+  resolution: "@types/debug@npm:4.1.7"
+  dependencies:
+    "@types/ms": "*"
+  checksum: 0a7b89d8ed72526858f0b61c6fd81f477853e8c4415bb97f48b1b5545248d2ae389931680b94b393b993a7cfe893537a200647d93defe6d87159b96812305adc
   languageName: node
   linkType: hard
 
@@ -1892,6 +1910,13 @@ __metadata:
   version: 9.1.1
   resolution: "@types/mocha@npm:9.1.1"
   checksum: 516077c0acd9806dc78317f88aaac0df5aaf0bdc2f63dfdadeabdf0b0137953b6ca65472e6ff7c30bc93ce4e0ae76eae70e8d46764b9a8eae4877a928b6ef49a
+  languageName: node
+  linkType: hard
+
+"@types/ms@npm:*":
+  version: 0.7.31
+  resolution: "@types/ms@npm:0.7.31"
+  checksum: daadd354aedde024cce6f5aa873fefe7b71b22cd0e28632a69e8b677aeb48ae8caa1c60e5919bb781df040d116b01cb4316335167a3fc0ef6a63fa3614c0f6da
   languageName: node
   linkType: hard
 

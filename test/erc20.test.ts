@@ -4,23 +4,22 @@ import { expect } from 'chai';
 import { BigNumber, BigNumberish } from 'ethers';
 import { ethers } from 'hardhat';
 
+import { InterchainGasPaymaster__factory } from '@hyperlane-xyz/core';
 import {
   ChainMap,
   Chains,
+  HyperlaneContractsMap,
   MultiProvider,
+  RouterConfig,
   TestCoreApp,
   TestCoreDeployer,
+  deployTestIgpsAndGetRouterConfig,
   objMap,
 } from '@hyperlane-xyz/sdk';
 import { utils } from '@hyperlane-xyz/utils';
 
-import {
-  HypERC20Config,
-  SyntheticConfig,
-  TokenConfig,
-  TokenType,
-} from '../src/config';
-import { HypERC20Contracts } from '../src/contracts';
+import { TokenConfig, TokenType } from '../src/config';
+import { HypERC20Factories } from '../src/contracts';
 import { HypERC20Deployer } from '../src/deploy';
 import {
   ERC20,
@@ -38,10 +37,10 @@ let remoteDomain: number;
 const totalSupply = 3000;
 const amount = 10;
 
-const tokenConfig: SyntheticConfig = {
-  type: TokenType.synthetic,
+const tokenMetadata = {
   name: 'HypERC20',
   symbol: 'HYP',
+  decimals: 18,
   totalSupply,
 };
 
@@ -55,10 +54,10 @@ for (const variant of [
     let recipient: SignerWithAddress;
     let core: TestCoreApp;
     let deployer: HypERC20Deployer;
-    let contracts: ChainMap<HypERC20Contracts>;
-    let localTokenConfig: TokenConfig = tokenConfig;
+    let contracts: HyperlaneContractsMap<HypERC20Factories>;
+    let localTokenConfig: TokenConfig;
     let local: HypERC20 | HypERC20Collateral | HypNative;
-    let remote: HypERC20 | HypERC20Collateral;
+    let remote: HypERC20;
     let interchainGasPayment: BigNumber;
 
     beforeEach(async () => {
@@ -72,14 +71,18 @@ for (const variant of [
       const coreDeployer = new TestCoreDeployer(multiProvider);
       const coreContractsMaps = await coreDeployer.deploy();
       core = new TestCoreApp(coreContractsMaps, multiProvider);
-      const coreConfig = core.getConnectionClientConfigMap();
+      const routerConfig = await deployTestIgpsAndGetRouterConfig(
+        multiProvider,
+        owner.address,
+        core.contractsMap,
+      );
 
       let erc20: ERC20 | undefined;
       if (variant === TokenType.collateral) {
         erc20 = await new ERC20Test__factory(owner).deploy(
-          tokenConfig.name,
-          tokenConfig.symbol,
-          tokenConfig.totalSupply,
+          tokenMetadata.name,
+          tokenMetadata.symbol,
+          tokenMetadata.totalSupply,
         );
         localTokenConfig = {
           type: variant,
@@ -89,17 +92,21 @@ for (const variant of [
         localTokenConfig = {
           type: variant,
         };
+      } else if (variant === TokenType.synthetic) {
+        localTokenConfig = { type: variant, ...tokenMetadata };
       }
 
-      const config: ChainMap<HypERC20Config> = objMap(coreConfig, (key) => ({
-        ...coreConfig[key],
-        ...(key === localChain ? localTokenConfig : tokenConfig),
+      const config = objMap(routerConfig, (key) => ({
+        ...routerConfig[key],
+        ...(key === localChain
+          ? localTokenConfig
+          : { type: TokenType.synthetic }),
         owner: owner.address,
-      }));
+      })) as ChainMap<TokenConfig & RouterConfig>;
 
-      deployer = new HypERC20Deployer(multiProvider, config, core);
-      contracts = await deployer.deploy();
-      local = contracts[localChain].router as HypERC20;
+      deployer = new HypERC20Deployer(multiProvider);
+      contracts = await deployer.deploy(config);
+      local = contracts[localChain].router;
 
       interchainGasPayment = await local.quoteGasPayment(remoteDomain);
 
@@ -152,8 +159,7 @@ for (const variant of [
 
     it('benchmark handle gas overhead', async () => {
       const localRaw = local.connect(ethers.provider);
-      const mailboxAddress =
-        core.contractsMap[localChain].mailbox.contract.address;
+      const mailboxAddress = core.contractsMap[localChain].mailbox.address;
       if (variant === TokenType.collateral) {
         const tokenAddress = await (local as HypERC20Collateral).wrappedToken();
         const token = ERC20__factory.connect(tokenAddress, owner);
@@ -219,9 +225,9 @@ for (const variant of [
     });
 
     it('allows interchain gas payment for remote transfers', async () => {
-      const interchainGasPaymaster =
-        core.contractsMap[localChain].interchainGasPaymaster.contract;
-
+      const interchainGasPaymaster = new InterchainGasPaymaster__factory()
+        .attach(await local.interchainGasPaymaster())
+        .connect(owner);
       await expect(
         local.transferRemote(
           remoteDomain,
