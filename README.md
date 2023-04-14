@@ -237,6 +237,9 @@ yarn
 yarn build:dev
 ```
 
+## Steps to Deploy a Warp Route
+
+Find it here - https://docs.hyperlane.xyz/docs/deploy/deploy-warp-route/deploy-a-warp-route
 
 ## Unit testing
 
