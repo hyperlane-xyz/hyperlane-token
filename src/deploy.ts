@@ -83,6 +83,34 @@ export class HypERC20Deployer extends GasRouterDeployer<
     }
   }
 
+  // Gets the metadata for a collateral token, favoring the config
+  // and getting any on-chain metadata that is missing.
+  async getCollateralMetadata(
+    chain: ChainName,
+    config: CollateralConfig,
+  ): Promise<ERC20Metadata> {
+    let metadata = {
+      name: config.name,
+      symbol: config.symbol,
+      decimals: config.decimals,
+      totalSupply: 0,
+    };
+
+    if (metadata.name !== undefined && metadata.symbol !== undefined && metadata.decimals !== undefined) {
+      return metadata as ERC20Metadata;
+    }
+
+    const fetchedMetadata = await HypERC20Deployer.fetchMetadata(
+      this.multiProvider.getProvider(chain),
+      config,
+    );
+
+    return {
+      ...fetchedMetadata,
+      ...metadata,
+    } as ERC20Metadata;
+  }
+
   protected async deployCollateral(
     chain: ChainName,
     config: HypERC20CollateralConfig,
@@ -165,8 +193,8 @@ export class HypERC20Deployer extends GasRouterDeployer<
 
     for (const [chain, config] of Object.entries(configMap)) {
       if (isCollateralConfig(config)) {
-        const collateralMetadata = await HypERC20Deployer.fetchMetadata(
-          this.multiProvider.getProvider(chain),
+        const collateralMetadata = await this.getCollateralMetadata(
+          chain,
           config,
         );
         tokenMetadata = {
