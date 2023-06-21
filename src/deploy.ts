@@ -89,7 +89,7 @@ export class HypERC20Deployer extends GasRouterDeployer<
     chain: ChainName,
     config: CollateralConfig,
   ): Promise<ERC20Metadata> {
-    let metadata = {
+    const metadata = {
       name: config.name,
       symbol: config.symbol,
       decimals: config.decimals,
