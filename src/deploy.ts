@@ -96,18 +96,20 @@ export class HypERC20Deployer extends GasRouterDeployer<
       totalSupply: 0,
     };
 
-    if (metadata.name !== undefined && metadata.symbol !== undefined && metadata.decimals !== undefined) {
+    if (metadata.name && metadata.symbol && metadata.decimals !== undefined && metadata.decimals !== null) {
       return metadata as ERC20Metadata;
     }
-
     const fetchedMetadata = await HypERC20Deployer.fetchMetadata(
       this.multiProvider.getProvider(chain),
       config,
     );
-
+    // Filter out undefined values
+    const definedConfigMetadata = Object.fromEntries(
+      Object.entries(metadata).filter(([_, v]) => v !== undefined)
+    );
     return {
       ...fetchedMetadata,
-      ...metadata,
+      ...definedConfigMetadata,
     } as ERC20Metadata;
   }
 
