@@ -27,6 +27,7 @@ export const isErc20Metadata = (metadata: any): metadata is ERC20Metadata =>
   metadata.decimals && isTokenMetadata(metadata);
 
 export type SyntheticConfig = TokenMetadata & {
+  votable?: boolean;
   type: TokenType.synthetic | TokenType.syntheticUri;
 };
 export type CollateralConfig = {

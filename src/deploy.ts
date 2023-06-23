@@ -17,7 +17,6 @@ import {
   ERC721RouterConfig,
   HypERC20CollateralConfig,
   HypERC20Config,
-  HypERC20VotableConfig,
   HypERC721CollateralConfig,
   HypERC721Config,
   HypNativeConfig,
@@ -38,7 +37,6 @@ import {
   HypERC20Collateral,
   HypERC20Collateral__factory,
   HypERC20__factory,
-  HypERC20Votable,
   HypERC20Votable__factory,
   HypERC721,
   HypERC721Collateral,
@@ -126,180 +124,9 @@ export class HypERC20Deployer extends GasRouterDeployer<
   ): Promise<HypERC20> {
     const router = await this.deployContractFromFactory(
       chain,
-      new HypERC20__factory(),
-      'HypERC20',
-      [config.decimals],
-    );
-    await this.multiProvider.handleTx(
-      chain,
-      router.initialize(
-        config.mailbox,
-        config.interchainGasPaymaster,
-        config.totalSupply,
-        config.name,
-        config.symbol,
-      ),
-    );
-    return router;
-  }
-
-  router(contracts: HyperlaneContracts<HypERC20Factories>) {
-    return contracts.router;
-  }
-
-  async deployContracts(chain: ChainName, config: HypERC20Config) {
-    let router: HypERC20 | HypERC20Collateral | HypNative;
-    if (isCollateralConfig(config)) {
-      router = await this.deployCollateral(chain, config);
-    } else if (isNativeConfig(config)) {
-      router = await this.deployNative(chain, config);
-    } else if (isSyntheticConfig(config)) {
-      router = await this.deploySynthetic(chain, config);
-    } else {
-      throw new Error('Invalid ERC20 token router config');
-    }
-    return { router };
-  }
-
-  async buildTokenMetadata(
-    configMap: ChainMap<TokenConfig>,
-  ): Promise<ChainMap<ERC20Metadata>> {
-    let tokenMetadata: ERC20Metadata | undefined;
-
-    for (const [chain, config] of Object.entries(configMap)) {
-      if (isCollateralConfig(config)) {
-        const collateralMetadata = await HypERC20Deployer.fetchMetadata(
-          this.multiProvider.getProvider(chain),
-          config,
-        );
-        tokenMetadata = {
-          ...collateralMetadata,
-          totalSupply: 0,
-        };
-      } else if (isNativeConfig(config)) {
-        const chainMetadata = this.multiProvider.getChainMetadata(chain);
-        if (chainMetadata.nativeToken) {
-          tokenMetadata = {
-            ...chainMetadata.nativeToken,
-            totalSupply: 0,
-          };
-        } else {
-          throw new Error(
-            `Warp route config specifies native token but chain metadata for ${chain} does not provide native token details`,
-          );
-        }
-      } else if (isErc20Metadata(config)) {
-        tokenMetadata = config;
-      }
-    }
-
-    if (!isErc20Metadata(tokenMetadata)) {
-      throw new Error('Invalid ERC20 token metadata');
-    }
-
-    return objMap(configMap, () => tokenMetadata!);
-  }
-
-  buildGasOverhead(configMap: ChainMap<TokenConfig>): ChainMap<GasConfig> {
-    return objMap(configMap, (_, config) => ({
-      gas: HypERC20Deployer.gasOverheadDefault(config),
-    }));
-  }
-
-  async deploy(configMap: ChainMap<TokenConfig & RouterConfig>) {
-    const tokenMetadata = await this.buildTokenMetadata(configMap);
-    const gasOverhead = this.buildGasOverhead(configMap);
-    const mergedConfig = objMap(configMap, (chain, config) => {
-      return {
-        ...tokenMetadata[chain],
-        ...gasOverhead[chain],
-        ...config,
-      };
-    }) as ChainMap<ERC20RouterConfig>;
-
-    return super.deploy(mergedConfig);
-  }
-}
-
-export class HypERC20VotableDeployer extends GasRouterDeployer<
-  ERC20RouterConfig,
-  HypERC20Factories
-> {
-  constructor(multiProvider: MultiProvider) {
-    super(multiProvider, {} as HypERC20Factories); // factories not used in deploy
-  }
-
-  static async fetchMetadata(
-    provider: providers.Provider,
-    config: CollateralConfig,
-  ): Promise<ERC20Metadata> {
-    const erc20 = ERC20__factory.connect(config.token, provider);
-
-    const [name, symbol, totalSupply, decimals] = await Promise.all([
-      erc20.name(),
-      erc20.symbol(),
-      erc20.totalSupply(),
-      erc20.decimals(),
-    ]);
-
-    return { name, symbol, totalSupply, decimals };
-  }
-
-  static gasOverheadDefault(config: TokenConfig): number {
-    switch (config.type) {
-      case 'synthetic':
-        return 64_000;
-      case 'native':
-        return 44_000;
-      case 'collateral':
-      default:
-        return 68_000;
-    }
-  }
-
-  protected async deployCollateral(
-    chain: ChainName,
-    config: HypERC20CollateralConfig,
-  ): Promise<HypERC20Collateral> {
-    const router = await this.deployContractFromFactory(
-      chain,
-      new HypERC20Collateral__factory(),
-      'HypERC20Collateral',
-      [config.token],
-    );
-    await this.multiProvider.handleTx(
-      chain,
-      router.initialize(config.mailbox, config.interchainGasPaymaster),
-    );
-    return router;
-  }
-
-  protected async deployNative(
-    chain: ChainName,
-    config: HypNativeConfig,
-  ): Promise<HypNative> {
-    const router = await this.deployContractFromFactory(
-      chain,
-      new HypNative__factory(),
-      'HypNative',
-      [],
-    );
-    await this.multiProvider.handleTx(
-      chain,
-      router.initialize(config.mailbox, config.interchainGasPaymaster),
-    );
-    return router;
-  }
-
-  protected async deploySynthetic(
-    chain: ChainName,
-    config: HypERC20VotableConfig,
-  ): Promise<HypERC20Votable> {
-    const router = await this.deployContractFromFactory(
-      chain,
-      new HypERC20Votable__factory(),
-      'HypERC20Votable',
-      [],
+      config.votable ? new HypERC20Votable__factory : new HypERC20__factory(),
+      config.votable ? 'HypERC20Votable' : "HypERC20",
+      config.votable ? [] : [config.decimals],
     );
     await this.multiProvider.handleTx(
       chain,
