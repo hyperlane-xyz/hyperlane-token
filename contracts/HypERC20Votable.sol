@@ -13,7 +13,7 @@ import "@openzeppelin/contracts-upgradeable/utils/ContextUpgradeable.sol";
  */
 contract HypERC20Votable is ERC20, TokenRouter, ERC20Permit, ERC20Votes {
 
-    constructor(uint8 /* decimals*/) ERC20("Interchain Token", "ICT") ERC20Permit("Interchain Token") {}
+    constructor() ERC20("Interchain Token", "ICT") ERC20Permit("Interchain Token") {}
 
     /**
      * @notice Initializes the Hyperlane router, ERC20 metadata, and mints initial supply to deployer.

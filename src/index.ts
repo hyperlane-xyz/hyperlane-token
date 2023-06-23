@@ -3,6 +3,7 @@ export {
   CollateralConfig,
   HypERC20CollateralConfig,
   HypERC20Config,
+  HypERC20VotableConfig,
   HypERC721CollateralConfig,
   HypERC721Config,
   isCollateralConfig,

@@ -58,10 +58,12 @@ export const isUriConfig = (config: TokenConfig) =>
   config.type === TokenType.collateralUri;
 
 export type HypERC20Config = GasRouterConfig & SyntheticConfig & ERC20Metadata;
+export type HypERC20VotableConfig = GasRouterConfig & SyntheticConfig & ERC20Metadata;
 export type HypERC20CollateralConfig = GasRouterConfig & CollateralConfig;
 export type HypNativeConfig = GasRouterConfig & NativeConfig;
 export type ERC20RouterConfig =
   | HypERC20Config
+  | HypERC20VotableConfig
   | HypERC20CollateralConfig
   | HypNativeConfig;
 
