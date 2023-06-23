@@ -2,20 +2,18 @@
 pragma solidity >=0.8.0;
 
 import {TokenRouter} from "./libs/TokenRouter.sol";
-
-import {ERC20Upgradeable} from "@openzeppelin/contracts-upgradeable/token/ERC20/ERC20Upgradeable.sol";
+import "@openzeppelin/contracts/token/ERC20/extensions/draft-ERC20Permit.sol";
+import "@openzeppelin/contracts/token/ERC20/extensions/ERC20Votes.sol";
+import "@openzeppelin/contracts-upgradeable/utils/ContextUpgradeable.sol";
 
 /**
  * @title Hyperlane ERC20 Token Router that extends ERC20 with remote transfer functionality.
  * @author Abacus Works
  * @dev Supply on each chain is not constant but the aggregate supply across all chains is.
  */
-contract HypERC20 is ERC20Upgradeable, TokenRouter {
-    uint8 private immutable _decimals;
+contract HypERC20Votable is ERC20, TokenRouter, ERC20Permit, ERC20Votes {
 
-    constructor(uint8 decimals) {
-        _decimals = decimals;
-    }
+    constructor(uint8 /* decimals*/) ERC20("Interchain Token", "ICT") ERC20Permit("Interchain Token") {}
 
     /**
      * @notice Initializes the Hyperlane router, ERC20 metadata, and mints initial supply to deployer.
@@ -37,14 +35,7 @@ contract HypERC20 is ERC20Upgradeable, TokenRouter {
             _mailbox,
             _interchainGasPaymaster
         );
-
-        // Initialize ERC20 metadata
-        __ERC20_init(_name, _symbol);
         _mint(msg.sender, _totalSupply);
-    }
-
-    function decimals() public view override returns (uint8) {
-        return _decimals;
     }
 
     /**
@@ -71,4 +62,34 @@ contract HypERC20 is ERC20Upgradeable, TokenRouter {
     ) internal override {
         _mint(_recipient, _amount);
     }
+
+    function _afterTokenTransfer(address from, address to, uint256 amount)
+        internal
+        override(ERC20, ERC20Votes)
+    {
+        super._afterTokenTransfer(from, to, amount);
+    }
+
+    function _mint(address to, uint256 amount)
+        internal
+        override(ERC20, ERC20Votes)
+    {
+        super._mint(to, amount);
+    }
+
+    function _burn(address account, uint256 amount)
+        internal
+        override(ERC20, ERC20Votes)
+    {
+        super._burn(account, amount);
+    }
+
+    function _msgData() internal view virtual override(Context, ContextUpgradeable) returns (bytes calldata) {
+        return super._msgData();
+    }
+
+    function _msgSender() internal view virtual override(Context, ContextUpgradeable) returns (address) {
+        return super._msgSender();
+    }
+
 }
