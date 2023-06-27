@@ -36,6 +36,7 @@ import {
   HypERC20,
   HypERC20Collateral,
   HypERC20Collateral__factory,
+  HypERC20CollateralVotable__factory,
   HypERC20__factory,
   HypERC20Votable__factory,
   HypERC721,
@@ -90,8 +91,8 @@ export class HypERC20Deployer extends GasRouterDeployer<
   ): Promise<HypERC20Collateral> {
     const router = await this.deployContractFromFactory(
       chain,
-      new HypERC20Collateral__factory(),
-      'HypERC20Collateral',
+      config.votable ? new HypERC20CollateralVotable__factory : new HypERC20Collateral__factory(),
+      config.votable ? 'HypERC20CollateralVotable' : 'HypERC20Collateral',
       [config.token],
     );
     await this.multiProvider.handleTx(

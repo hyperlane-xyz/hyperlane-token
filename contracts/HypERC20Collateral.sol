@@ -7,10 +7,6 @@ import {Message} from "./libs/Message.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 
-interface delegateTokenInterface{
-    function delegate(address delegatee) external;
-}
-
 /**
  * @title Hyperlane ERC20 Token Collateral that wraps an existing ERC20 with remote transfer functionality.
  * @author Abacus Works
@@ -19,7 +15,6 @@ contract HypERC20Collateral is TokenRouter {
     using SafeERC20 for IERC20;
 
     IERC20 public immutable wrappedToken;
-    address public tokenAddress;
 
     /**
      * @notice Constructor
@@ -27,11 +22,6 @@ contract HypERC20Collateral is TokenRouter {
      */
     constructor(address erc20) {
         wrappedToken = IERC20(erc20);
-        tokenAddress = erc20;
-    }
-
-    function delegateVotes(address _L1VoteDelegator) external onlyOwner{
-        delegateTokenInterface(tokenAddress).delegate(_L1VoteDelegator);
     }
 
     /**
